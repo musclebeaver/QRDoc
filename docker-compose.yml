@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. Dedicated private Redis container for temporary encrypted payloads
+  qrdoc-redis:
+    image: redis:7-alpine
+    container_name: qrdoc-redis
+    restart: always
+    # Ports are not exposed to the host for maximum security (Zero-Knowledge)
+    expose:
+      - 6379
+
+  # 2. Node.js backend container mapped to host port 8888
+  qrdoc-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qrdoc-backend
+    restart: always
+    ports:
+      - "8888:3000" # Map host port 8888 to container port 3000
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://qrdoc-redis:6379
+    depends_on:
+      - qrdoc-redis
+
+  # 3. Nginx Reverse Proxy mapped to host port 20080
+  qrdoc-nginx:
+    image: nginx:alpine
+    container_name: qrdoc-nginx
+    restart: always
+    ports:
+      - "20080:80" # Map host port 20080 to Nginx port 80
+    volumes:
+      - ./web-viewer:/usr/share/nginx/html:ro # Serve Web Viewer static files
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro   # Mount custom Nginx config
+    depends_on:
+      - qrdoc-backend
