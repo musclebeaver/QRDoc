@@ -1,160 +1,324 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html class="light" lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRDoc Secure Health Viewer</title>
-    <meta name="description" content="Gemini AI 기반 암호화 의료 데이터 안전 열람 시스템. 환자의 건강 정보 및 복약 이력을 일회성 복호화로 확인합니다.">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Custom Style -->
-    <link rel="stylesheet" href="style.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>QRDoc | 의료 데이터 뷰어</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "secondary": "#006a61",
+              "background": "#faf8ff",
+              "on-tertiary-fixed": "#380d00",
+              "primary-container": "#1a56db",
+              "surface-container-highest": "#e2e1ed",
+              "on-primary-container": "#d4dcff",
+              "tertiary-fixed": "#ffdbcf",
+              "primary-fixed": "#dbe1ff",
+              "primary-fixed-dim": "#b5c4ff",
+              "inverse-on-surface": "#f0f0fb",
+              "tertiary-container": "#ad3b00",
+              "secondary-fixed-dim": "#6bd8cb",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#ededf8",
+              "on-primary-fixed": "#00174d",
+              "surface": "#faf8ff",
+              "error": "#ba1a1a",
+              "on-primary-fixed-variant": "#003dab",
+              "on-error-container": "#93000a",
+              "surface-dim": "#d9d9e4",
+              "on-background": "#191b23",
+              "on-error": "#ffffff",
+              "on-tertiary-container": "#ffd4c5",
+              "surface-tint": "#1353d8",
+              "primary": "#003fb1",
+              "error-container": "#ffdad6",
+              "on-tertiary-fixed-variant": "#802a00",
+              "tertiary-fixed-dim": "#ffb59a",
+              "tertiary": "#852b00",
+              "on-secondary": "#ffffff",
+              "on-surface-variant": "#434654",
+              "outline-variant": "#c3c5d7",
+              "secondary-fixed": "#89f5e7",
+              "on-surface": "#191b23",
+              "surface-variant": "#e2e1ed",
+              "inverse-primary": "#b5c4ff",
+              "on-secondary-fixed": "#00201d",
+              "surface-bright": "#faf8ff",
+              "surface-container-high": "#e7e7f3",
+              "secondary-container": "#86f2e4",
+              "on-primary": "#ffffff",
+              "inverse-surface": "#2e3039",
+              "on-secondary-fixed-variant": "#005049",
+              "surface-container-low": "#f3f3fe",
+              "surface-container-lowest": "#ffffff",
+              "outline": "#737686",
+              "on-secondary-container": "#006f66"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+            "spacing": {
+              "xs": "4px",
+              "sm": "12px",
+              "container-max": "1200px",
+              "lg": "32px",
+              "xl": "48px",
+              "md": "20px",
+              "touch-target": "48px",
+              "gutter": "24px",
+              "base": "8px"
+            },
+            "fontFamily": {
+              "body-lg": ["Inter", "sans-serif"],
+              "headline-lg-mobile": ["Inter", "sans-serif"],
+              "headline-md": ["Inter", "sans-serif"],
+              "body-md": ["Inter", "sans-serif"],
+              "caption": ["Inter", "sans-serif"],
+              "label-md": ["Atkinson Hyperlegible Next", "sans-serif"],
+              "headline-lg": ["Inter", "sans-serif"],
+              "label-lg": ["Atkinson Hyperlegible Next", "sans-serif"],
+              "display-lg": ["Inter", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-feature-settings: 'liga';
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .shadow-medical-card {
+            box-shadow: 0px 4px 15px rgba(26, 86, 219, 0.04);
+        }
+    </style>
 </head>
-<body class="dark-theme">
-    <!-- Background glow elements -->
-    <div class="glow-bg">
-        <div class="glow-1"></div>
-        <div class="glow-2"></div>
-    </div>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+
+    <!-- Top AppBar -->
+    <header class="bg-surface border-b border-outline-variant flex items-center justify-between px-md w-full h-14 sticky top-0 z-50">
+        <div class="flex items-center gap-sm">
+            <span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors rounded-full p-1" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+            <div class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+                QRDoc
+            </div>
+            <span class="font-label-lg text-label-lg text-on-surface-variant ml-2 border-l border-outline-variant pl-4 hidden sm:block">의료 데이터 뷰어</span>
+        </div>
+        <div class="flex items-center">
+            <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-label-md text-label-md">
+                 DR
+            </div>
+        </div>
+    </header>
 
     <!-- Main Container -->
-    <main class="app-container" id="main-container">
-        <!-- Top Status Bar (Timer & Connection Info) -->
-        <header class="header">
-            <div class="logo-area">
-                <span class="pulse-indicator"></span>
-                <h1>QRDoc <span class="accent-text">Viewer</span></h1>
+    <main class="flex-grow w-full max-w-container-max mx-auto px-md py-xl flex flex-col justify-center">
+
+        <!-- 1. LOADING STATE -->
+        <section id="loading-state" class="flex flex-col items-center justify-center py-20 text-center space-y-md">
+            <div class="relative w-16 h-16">
+                <div class="absolute inset-0 rounded-full border-4 border-surface-container-highest"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-t-primary animate-spin"></div>
             </div>
-            <!-- Countdown Timer -->
-            <div class="timer-box" id="timer-box">
-                <svg class="progress-ring" width="36" height="36">
-                    <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="3" fill="transparent" r="14" cx="18" cy="18" />
-                    <circle class="progress-ring__circle" id="timer-ring" stroke="var(--primary-color)" stroke-width="3" fill="transparent" r="14" cx="18" cy="18" />
-                </svg>
-                <div class="timer-text">
-                    <span class="label">남은 시간</span>
-                    <span class="time" id="countdown-timer">03:00</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Loading State -->
-        <section class="loading-state" id="loading-state">
-            <div class="spinner-box">
-                <div class="spinner"></div>
-            </div>
-            <p>환자 데이터 수신 중...</p>
-            <span class="subtext">안전한 Zero-Knowledge 채널을 통해 복호화를 준비 중입니다.</span>
-        </section>
-
-        <!-- Error State -->
-        <section class="error-state hidden" id="error-state">
-            <div class="error-icon">⚠️</div>
-            <h2 id="error-title">조회 불가</h2>
-            <p id="error-message">데이터가 만료되었거나 올바르지 않은 접근입니다.</p>
-            <span class="subtext">본 페이지는 3분이 지나면 자동 휘발되어 접근할 수 없습니다.</span>
-        </section>
-
-        <!-- Main Dashboard (Decrypted Content) -->
-        <section class="dashboard hidden" id="dashboard">
-            <div class="dashboard-grid">
-                <!-- Left Column: Patient Profile & Allergies -->
-                <div class="grid-left">
-                    <!-- Profile Card -->
-                    <div class="glass-card profile-card">
-                        <div class="card-header">
-                            <span class="icon">👤</span>
-                            <h3>환자 기본 정보</h3>
-                        </div>
-                        <div class="profile-info">
-                            <div class="info-group">
-                                <span class="info-label">이름</span>
-                                <span class="info-value" id="patient-name">-</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">생년월일</span>
-                                <span class="info-value" id="patient-birth">-</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">혈액형</span>
-                                <span class="info-value accent-badge" id="patient-blood">-</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">긴급 연락처</span>
-                                <span class="info-value" id="patient-emergency">-</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medical Alerts Card -->
-                    <div class="glass-card alert-card">
-                        <div class="card-header">
-                            <span class="icon">⚠️</span>
-                            <h3>핵심 기왕증 및 알레르기</h3>
-                        </div>
-                        <div class="alert-section">
-                            <h4>지병 (만성질환)</h4>
-                            <div class="badge-container" id="chronic-diseases-container">
-                                <!-- Loaded dynamically -->
-                            </div>
-                        </div>
-                        <div class="alert-section">
-                            <h4>알레르기 정보</h4>
-                            <div class="badge-container" id="allergies-container">
-                                <!-- Loaded dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Medication Logs -->
-                <div class="grid-right">
-                    <div class="glass-card medication-card">
-                        <div class="card-header">
-                            <span class="icon">💊</span>
-                            <h3>최근 복용 약물 내역</h3>
-                            <span class="source-badge">Gemini OCR</span>
-                        </div>
-                        <div class="medication-list-wrapper">
-                            <table class="medication-table">
-                                <thead>
-                                    <tr>
-                                        <th>약물명</th>
-                                        <th>1회 용량</th>
-                                        <th>일 복용 횟수</th>
-                                        <th>총 복용일</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="medication-list">
-                                    <!-- Loaded dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+            <div class="space-y-xs">
+                <h3 class="font-headline-md text-headline-md text-on-surface">환자 데이터 수신 중...</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">안전한 Zero-Knowledge 채널을 통해 복호화를 준비 중입니다.</p>
             </div>
         </section>
 
-        <!-- Expiry Warning Toast -->
-        <div class="warning-toast hidden" id="warning-toast">
-            🔒 세션 만료가 30초 남았습니다. 데이터 복사 시 주의해 주세요.
-        </div>
+        <!-- 2. ERROR STATE (Hidden by default) -->
+        <section id="error-state" class="hidden flex flex-col items-center justify-center py-20 text-center space-y-md">
+            <div class="w-16 h-16 rounded-full bg-error-container text-error flex items-center justify-center">
+                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+            </div>
+            <div class="space-y-xs">
+                <h3 id="error-title" class="font-headline-md text-headline-md text-error">조회 불가</h3>
+                <p id="error-message" class="font-body-md text-body-md text-on-surface-variant">데이터가 만료되었거나 올바르지 않은 접근입니다.</p>
+                <p class="font-caption text-caption text-on-surface-variant opacity-80">본 페이지는 3분이 지나면 자동 휘발되어 접근할 수 없습니다.</p>
+            </div>
+        </section>
+
+        <!-- 3. DECRYPTED DASHBOARD (Hidden by default) -->
+        <section id="dashboard" class="hidden space-y-xl w-full">
+            <!-- Security Header (Timer) -->
+            <div id="timer-box" class="bg-error-container border border-error rounded-xl p-md flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 shadow-sm relative overflow-hidden">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIgMkgwdjRoMnY0aDJ2LTRoMnYyaC0ydjJ4aC1ydjRMMiAxMHY0SDJWOGg0VjZINHY0SDJWMnoiIGZpbGw9IiM5MzAwMGEiIGZpbGwtb3BhY2l0eT0iMC4wNSIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+')] opacity-20 pointer-events-none"></div>
+                <div class="flex items-center gap-md z-10">
+                    <div class="w-12 h-12 rounded-full bg-error text-on-error flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security_update_warning</span>
+                    </div>
+                    <div>
+                        <h2 class="font-headline-md text-headline-md text-on-error-container m-0">복호화된 세션</h2>
+                        <p class="font-body-md text-body-md text-on-error-container opacity-90 m-0">휘발성 데이터 (조회 후 즉시 파기)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-md z-10 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-error pt-4 sm:pt-0 sm:pl-md border-opacity-30">
+                    <div class="text-center">
+                        <span class="block font-label-md text-label-md text-on-error-container uppercase tracking-wider mb-1">세션 만료까지</span>
+                        <div class="font-display-lg text-display-lg text-error font-bold" id="countdown-timer">03:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Summary Card -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-medical-card relative">
+                <div class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-2 font-label-md text-label-md border border-secondary/20">
+                    <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    본인 인증 완료
+                </div>
+                <h3 class="font-headline-lg text-headline-lg text-on-surface mb-lg flex items-center gap-sm pb-sm border-b border-surface-variant">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">patient_list</span>
+                    환자 요약 정보
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-md">
+                    <div class="flex items-start gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+                        </div>
+                        <div>
+                            <span class="block font-label-md text-label-md text-on-surface-variant mb-1">성함</span>
+                            <span class="block font-body-lg text-body-lg text-on-surface font-semibold" id="patient-name">-</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+                        </div>
+                        <div>
+                            <span class="block font-label-md text-label-md text-on-surface-variant mb-1">생년월일</span>
+                            <span class="block font-body-lg text-body-lg text-on-surface font-semibold" id="patient-birth">-</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bloodtype</span>
+                        </div>
+                        <div>
+                            <span class="block font-label-md text-label-md text-on-surface-variant mb-1">혈액형</span>
+                            <span class="block font-body-lg text-body-lg text-primary font-bold" id="patient-blood">-</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">call</span>
+                        </div>
+                        <div>
+                            <span class="block font-label-md text-label-md text-on-surface-variant mb-1">긴급 연락처</span>
+                            <span class="block font-body-lg text-body-lg text-on-surface font-semibold" id="patient-emergency">-</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-sm">
+                        <div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_information</span>
+                        </div>
+                        <div>
+                            <span class="block font-label-md text-label-md text-on-surface-variant mb-1">알레르기</span>
+                            <span class="block font-body-lg text-body-lg text-error font-semibold" id="patient-allergies">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diseases and Allergies Badge Lists -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-md mt-lg pt-lg border-t border-surface-variant">
+                    <div>
+                        <h4 class="font-label-lg text-label-lg text-on-surface-variant mb-sm">만성 질환</h4>
+                        <div class="flex flex-wrap gap-xs" id="chronic-diseases-container">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-label-lg text-label-lg text-on-surface-variant mb-sm">알레르기 상세</h4>
+                        <div class="flex flex-wrap gap-xs" id="allergies-container">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medication History Card -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-medical-card overflow-hidden">
+                <div class="p-lg border-b border-surface-variant flex justify-between items-center bg-surface-container-low">
+                    <h3 class="font-headline-md text-headline-md text-on-surface m-0 flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">prescriptions</span>
+                        복약 이력
+                    </h3>
+                    <span class="bg-primary-container text-on-primary-container font-label-md text-label-md px-3 py-1 rounded-full border border-primary/10">Gemini OCR 판독</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface border-b border-outline-variant">
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">약물명</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">1회 용량</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">일 복용 횟수</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">총 복용일</th>
+                            </tr>
+                        </thead>
+                        <tbody id="medication-list" class="font-body-md text-body-md text-on-surface divide-y divide-surface-variant">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Termination Section -->
+            <div class="flex justify-end pt-md">
+                <button id="btn-terminate" class="bg-error text-on-error h-[48px] px-xl rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-on-error-container transition-colors shadow-md active:scale-95">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">cancel</span>
+                    세션 종료
+                </button>
+            </div>
+        </section>
+
     </main>
 
-    <!-- Session Terminated Overlay -->
-    <section class="expired-overlay hidden" id="expired-overlay">
-        <div class="expired-card">
-            <div class="lock-icon">🔒</div>
-            <h2>세션이 완전히 종료되었습니다</h2>
-            <p>보안 규정에 따라 데이터가 브라우저 메모리 및 서버에서 영구 파기되었습니다.</p>
-            <span class="subtext">재조회하려면 환자의 새로운 QR 코드를 다시 스캔해 주십시오.</span>
-            <button onclick="window.close()" class="btn-close" id="btn-close-window">창 닫기</button>
+    <!-- EXPIRED OVERLAY (Hidden by default) -->
+    <section id="expired-overlay" class="hidden fixed inset-0 z-[100] bg-surface/90 backdrop-blur-md flex items-center justify-center px-md">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-lg max-w-md w-full text-center space-y-md">
+            <div class="w-16 h-16 rounded-full bg-surface-container-highest text-primary flex items-center justify-center mx-auto">
+                <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+            </div>
+            <div class="space-y-xs">
+                <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">세션이 만료되었습니다</h2>
+                <p class="font-body-md text-body-md text-on-surface-variant">보안을 위해 조회된 모든 의료 데이터는 메모리 및 화면에서 안전하게 소거되었습니다.</p>
+            </div>
+            <p class="font-caption text-caption text-on-surface-variant opacity-80">환자의 QR 코드를 다시 스캔하여 조회해 주십시오.</p>
         </div>
     </section>
 
-    <!-- Custom Logic -->
+    <!-- WARNING TOAST (Hidden by default) -->
+    <div id="warning-toast" class="hidden fixed bottom-md left-1/2 -translate-x-1/2 z-[90] bg-error text-on-error font-label-lg text-label-lg px-lg py-sm rounded-full shadow-lg flex items-center gap-2 animate-bounce">
+        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+        세션 만료가 30초 남았습니다. 데이터 복사 시 주의해 주세요.
+    </div>
+
+    <!-- Scripts -->
     <script src="app.js"></script>
 </body>
 </html>

@@ -11,20 +11,6 @@ let countdownInterval = null;
 let timeLeft = 180; // 3 minutes (180 seconds)
 const TOTAL_TIME = 180;
 
-// Circular Progress Ring Configuration
-const ring = document.getElementById('timer-ring');
-const radius = ring.r.baseVal.value;
-const circumference = 2 * Math.PI * radius;
-
-// Initialize Ring Stroke Dasharray
-ring.style.strokeDasharray = `${circumference} ${circumference}`;
-ring.style.strokeDashoffset = 0;
-
-function setProgress(percent) {
-    const offset = circumference - (percent / 100) * circumference;
-    ring.style.strokeDashoffset = offset;
-}
-
 // Helper: Convert Base64 string to Uint8Array
 function base64ToUint8Array(base64String) {
     const raw = window.atob(base64String);
@@ -88,10 +74,16 @@ async function decryptPayload(ciphertextB64, ivB64, tagB64, secretKeyB64Url) {
 
 // Initialize Application Page
 async function init() {
-    // 1. URL 파라미터 파싱
+    // 1. Parse URL Parameters and Hash Key
     const urlParams = new URLSearchParams(window.location.search);
     const dataId = urlParams.get('id');
     const secretKeyHash = window.location.hash.substring(1); // URL Hash (# 뒤의 값)
+
+    // Bind termination button immediately
+    const btnTerminate = document.getElementById('btn-terminate');
+    if (btnTerminate) {
+        btnTerminate.addEventListener('click', triggerExpiration);
+    }
 
     if (!dataId || !secretKeyHash) {
         showError('유효하지 않은 주소', '데이터 ID 혹은 복호화 암호 키가 누락되었습니다.');
@@ -101,12 +93,12 @@ async function init() {
     decryptionKey = secretKeyHash;
 
     try {
-        // 2. 서버에서 암호화 데이터 수집
+        // 2. Fetch encrypted data from backend
         const response = await fetch(`${API_BASE_URL}/share/${dataId}`);
         
         if (!response.ok) {
             if (response.status === 404) {
-                showError('데이터 만료됨', '데이터가 만료되었거나 이미 1회 조회가 이루어져 서버에서 완전히 삭제되었습니다.');
+                showError('데이터 만료됨', '데이터가 만료되었거나 이미 다른 의료진이 조회하여 서버에서 완전히 삭제되었습니다.');
             } else {
                 showError('네트워크 오류', '서버에서 데이터를 받아오는 과정에서 오류가 발생했습니다.');
             }
@@ -115,14 +107,14 @@ async function init() {
 
         const data = await response.json(); // { ciphertext, iv, tag }
 
-        // 3. 클라이언트 단 복호화 실행 (Zero-Knowledge)
+        // 3. Client-side decryption (Zero-Knowledge)
         const decryptedText = await decryptPayload(data.ciphertext, data.iv, data.tag, decryptionKey);
         
-        // 4. 구조화 JSON 파싱 및 데이터 렌더링
+        // 4. Parse JSON & Render
         patientData = JSON.parse(decryptedText);
         renderDashboard(patientData);
 
-        // 5. 타이머 시작
+        // 5. Start Countdown
         startCountdown();
 
     } catch (err) {
@@ -142,34 +134,36 @@ function renderDashboard(data) {
     document.getElementById('patient-blood').textContent = data.profile?.bloodType || '미기재';
     document.getElementById('patient-emergency').textContent = data.profile?.emergencyContact || '미기재';
 
-    // Chronic Diseases
+    const allergyList = data.profile?.allergies || [];
+    document.getElementById('patient-allergies').textContent = allergyList.length > 0 ? allergyList[0] : '없음';
+
+    // Chronic Diseases List
     const chronicContainer = document.getElementById('chronic-diseases-container');
     chronicContainer.innerHTML = '';
     const chronicList = data.profile?.chronicDiseases || [];
     if (chronicList.length > 0) {
         chronicList.forEach(disease => {
             const span = document.createElement('span');
-            span.className = 'badge badge-disease';
+            span.className = 'bg-primary-fixed text-on-primary-fixed font-label-md text-label-md px-3 py-1 rounded-full border border-primary/10';
             span.textContent = disease;
             chronicContainer.appendChild(span);
         });
     } else {
-        chronicContainer.innerHTML = '<span class="no-alerts">지병 없음</span>';
+        chronicContainer.innerHTML = '<span class="text-on-surface-variant opacity-60 font-body-md">지병 없음</span>';
     }
 
-    // Allergies
+    // Allergies List
     const allergiesContainer = document.getElementById('allergies-container');
     allergiesContainer.innerHTML = '';
-    const allergyList = data.profile?.allergies || [];
     if (allergyList.length > 0) {
         allergyList.forEach(allergy => {
             const span = document.createElement('span');
-            span.className = 'badge badge-allergy';
+            span.className = 'bg-error-container text-on-error-container font-label-md text-label-md px-3 py-1 rounded-full border border-error/10';
             span.textContent = allergy;
             allergiesContainer.appendChild(span);
         });
     } else {
-        allergiesContainer.innerHTML = '<span class="no-alerts">알레르기 없음</span>';
+        allergiesContainer.innerHTML = '<span class="text-on-surface-variant opacity-60 font-body-md">알레르기 없음</span>';
     }
 
     // Medication logs table
@@ -180,16 +174,22 @@ function renderDashboard(data) {
     if (medications.length > 0) {
         medications.forEach(med => {
             const tr = document.createElement('tr');
+            tr.className = 'hover:bg-surface-container-low transition-colors group';
             tr.innerHTML = `
-                <td class="medication-name">${escapeHtml(med.medicineName)}</td>
-                <td>${escapeHtml(med.dosage)}</td>
-                <td>${med.frequencyPerDay}회</td>
-                <td>${med.totalDays}일</td>
+                <td class="p-md flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">pill</span>
+                    </div>
+                    <span class="font-semibold text-primary">${escapeHtml(med.medicineName)}</span>
+                </td>
+                <td class="p-md text-on-surface-variant font-medium">${escapeHtml(med.dosage)}</td>
+                <td class="p-md text-on-surface-variant font-medium">${med.frequencyPerDay}회</td>
+                <td class="p-md text-on-surface-variant font-medium">${med.totalDays}일</td>
             `;
             medListContainer.appendChild(tr);
         });
     } else {
-        medListContainer.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">복용 중인 약물이 없습니다.</td></tr>';
+        medListContainer.innerHTML = '<tr><td colspan="4" class="p-md text-center text-on-surface-variant opacity-60">복용 중인 약물이 없습니다.</td></tr>';
     }
 }
 
@@ -214,30 +214,34 @@ function startCountdown() {
     }, 1000);
 }
 
-// Update countdown text & circle bar progress
+// Update countdown text UI
 function updateTimerUI() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
     const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
     const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
 
-    document.getElementById('countdown-timer').textContent = `${formattedMinutes}:${formattedSeconds}`;
-    
-    // Circular Progress update
-    const percent = (timeLeft / TOTAL_TIME) * 100;
-    setProgress(percent);
+    const timerDisplay = document.getElementById('countdown-timer');
+    if (timerDisplay) {
+        timerDisplay.textContent = `${formattedMinutes}:${formattedSeconds}`;
+        if (timeLeft <= 30) {
+            timerDisplay.classList.add('animate-pulse');
+        } else {
+            timerDisplay.classList.remove('animate-pulse');
+        }
+    }
 }
 
 // Wipes Patient Data and Forces Expiration Overlay
 function triggerExpiration() {
     clearInterval(countdownInterval);
     
-    // [보안 핵심] 브라우저 메모리에 상주된 환자 개인정보 완전 초기화 (Garbage Collection 유도)
+    // [Security Principle] Hard-delete all patient details in client memory to trigger Garbage Collection
     patientData = null;
     decryptionKey = null;
 
     // Reset DOM text contents
-    const clearElements = ['patient-name', 'patient-birth', 'patient-blood', 'patient-emergency'];
+    const clearElements = ['patient-name', 'patient-birth', 'patient-blood', 'patient-emergency', 'patient-allergies'];
     clearElements.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '***';
@@ -250,7 +254,7 @@ function triggerExpiration() {
     // Show Terminated Overlay
     document.getElementById('warning-toast').classList.add('hidden');
     document.getElementById('expired-overlay').classList.remove('hidden');
-    document.getElementById('main-container').style.filter = 'blur(10px)';
+    document.getElementById('dashboard').classList.add('opacity-10', 'pointer-events-none');
 }
 
 // Error UI Display
@@ -263,7 +267,7 @@ function showError(title, message) {
     document.getElementById('error-message').textContent = message;
     errorState.classList.remove('hidden');
     
-    // Stop timer
+    // Hide timer
     document.getElementById('timer-box').classList.add('hidden');
 }
 
@@ -285,19 +289,19 @@ function escapeHtml(string) {
     for (index = match.index; index < str.length; index++) {
         switch (str.charCodeAt(index)) {
             case 34: // "
-                escape = '&quot;';
+                escape = '&amp;quot;';
                 break;
             case 38: // &
-                escape = '&amp;';
+                escape = '&amp;amp;';
                 break;
             case 39: // '
                 escape = '&#39;';
                 break;
             case 60: // <
-                escape = '&lt;';
+                escape = '&amp;lt;';
                 break;
             case 62: // >
-                escape = '&gt;';
+                escape = '&amp;gt;';
                 break;
             default:
                 continue;
