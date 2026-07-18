@@ -1,8 +1,7 @@
-// Configuration
-const DEV_PORT = '3000';
-const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? `http://localhost:${DEV_PORT}/api`
-    : '/api'; // Relative route in production
+const API_BASE_URL = (window.location.protocol === 'file:')
+    ? 'http://localhost:8888/api'
+    : '/api'; // Relative route for Nginx proxy on same host/port
+
 
 // Global state variables (wiped on exit)
 let patientData = null;
