@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'screens/patient_home_screen.dart';
+import 'services/local_storage_service.dart';
 
-void main() {
+// Singleton instance of the secure storage database service
+final LocalStorageService localStorage = LocalStorageService();
+
+void main() async {
+  // Ensure Flutter engine bindings are initialized for native channels
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Hive encrypted database using secure OS credentials
+  await localStorage.initDatabase();
+  
   runApp(const MyApp());
 }
 

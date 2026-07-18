@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart'; // To access the global localStorage singleton
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
 import 'qr_generator_screen.dart';
@@ -27,8 +28,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onErrorContainer = Color(0xFF93000A);
 
-  // Mock Patient Profile
-  final PatientProfile _profile = PatientProfile(
+  // Default patient profile used as initial state before loading from Hive DB
+  PatientProfile _profile = PatientProfile(
     uuid: 'patient-123',
     name: 'John Doe',
     birthDate: '1975-05-12',
@@ -40,30 +41,26 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   );
 
   // Dynamic Medication Logs list in State
-  final List<MedicationLog> _medications = [
-    MedicationLog(
-      id: '1',
-      medicineName: 'Amoxicillin',
-      dosage: '500mg',
-      frequencyPerDay: 3,
-      totalDays: 7,
-      prescriptionDate: '2023-10-24',
-      inputMethod: 'GEMINI_AI_OCR',
-      isActive: true,
-    ),
-    MedicationLog(
-      id: '2',
-      medicineName: 'Lisinopril',
-      dosage: '10mg',
-      frequencyPerDay: 1,
-      totalDays: 30,
-      prescriptionDate: '2023-10-15',
-      inputMethod: 'GEMINI_AI_OCR',
-      isActive: true,
-    ),
-  ];
-
+  List<MedicationLog> _medications = [];
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocalData();
+  }
+
+  // Load profile and medication logs from encrypted Hive storage
+  void _loadLocalData() {
+    final savedProfile = localStorage.getProfile();
+    final savedMedications = localStorage.getMedications();
+    setState(() {
+      if (savedProfile != null) {
+        _profile = savedProfile;
+      }
+      _medications = savedMedications;
+    });
+  }
 
   // Navigates to AI Review Screen to add a new prescription (simulating OCR scan)
   void _scanNewPrescription() {
@@ -83,10 +80,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       MaterialPageRoute(
         builder: (context) => AiReviewScreen(
           initialLog: mockOcrLog,
-          onSave: (newLog) {
-            setState(() {
-              _medications.insert(0, newLog);
-            });
+          onSave: (newLog) async {
+            // Write payload to secure local database
+            await localStorage.saveMedication(newLog);
+            _loadLocalData(); // Refresh UI State
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
             );
@@ -102,13 +99,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       MaterialPageRoute(
         builder: (context) => AiReviewScreen(
           initialLog: log,
-          onSave: (updatedLog) {
-            setState(() {
-              final index = _medications.indexWhere((m) => m.id == updatedLog.id);
-              if (index != -1) {
-                _medications[index] = updatedLog;
-              }
-            });
+          onSave: (updatedLog) async {
+            // Update payload inside secure local database
+            await localStorage.saveMedication(updatedLog);
+            _loadLocalData(); // Refresh UI State
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('복약 정보가 성공적으로 수정되었습니다.')),
             );
@@ -139,7 +133,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: primaryColor),
           onPressed: () {
-            // Revert back or show a toast
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('메인 화면입니다.')),
             );
