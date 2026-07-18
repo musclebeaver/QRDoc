@@ -66,7 +66,7 @@ export const processPrescriptionOCR = async (req: Request, res: Response): Promi
 
     // Calling the Google Gen AI SDK
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.5-flash',
       contents: [
         {
           inlineData: {
