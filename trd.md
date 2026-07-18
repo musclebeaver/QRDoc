@@ -3,16 +3,21 @@
 ## 1. 시스템 아키텍처 개요 (System Architecture)
 본 시스템은 개인정보 유출 리스크를 원천 차단하기 위해 **'Zero-Knowledge (무지식 증명) 지향형 하이브리드 아키텍처'**를 채택한다. 모든 민감 데이터의 암호화 및 복호화는 클라이언트 단(Flutter 앱 및 웹 브라우저)에서 수행되며, 백엔드 중계 서버는 암호화된 바이너리 데이터를 메모리 상에서 3분간 중계하는 역할만 수행한다.
 
+배포 환경은 **Docker Compose**를 기반으로 하며, **Cloudflare Tunnel**을 통해 도메인 주소로 안전하게 서빙된다.
+
 ```text
-[환자용 Flutter 앱]                               [의료진용 반응형 웹 뷰어]
-│                                                    ▲
-│ (1) AES-256-GCM 암호화                              │ (5) URL Fragment(#) Key로 복호화
-▼                                                    │
-[암호화 데이터] ──(2) POST (유효기간 3분)──> [임시 중계 서버] ──(4) GET ──┘
-(Node.js/Redis)
-│
-(3) QR 코드 URL 매핑
-(https://domain.com/v/id#key)
+[환자용 Flutter 앱]                              [의료진용 반응형 웹 뷰어]
+  │                                                   ▲
+  │ (1) AES-256-GCM 암호화                             │ (5) URL Fragment(#) Key로 복호화
+  ▼                                                   │
+[암호화 데이터] ─(2) POST ─> [Cloudflare Tunnel]      │
+                              │ (qrdoc.devbeaver.cloud)
+                              ▼                       │
+                       [Nginx Proxy (20080)] ──(4) GET┘
+                              │
+                              ├──> [Express Backend (5000)]
+                              │      └──> [Redis Cache (6379)] (3분 임시 저장)
+                              └──> [Static HTML Viewer]
 ```
 
 ---
@@ -32,14 +37,15 @@
 
 ### 2.2 백엔드 & 인프라 (Backend & Infrastructure)
 * **중계 서버 (Relay Server):**
-  * **Runtime:** Node.js (TypeScript) + Express 또는 Fastify
+  * **Runtime:** Node.js (TypeScript) + Express (Docker Containerized)
 * **In-Memory 데이터베이스:** 
-  * **Redis:** 임시 데이터 중계 및 `TTL (Time-To-Live)`을 활용한 3분(180초) 후 영구 자동 파기
+  * **Redis:** 임시 데이터 중계 및 `TTL (Time-To-Live)`을 활용한 3분(180초) 후 영구 자동 파기 (도커 내부 격리망 6379 포트)
 * **AI Engine:**
-  * **Model:** Google Gemini 1.5 Flash API (Multimodal 이미지 및 텍스트 구조화 동시 처리)
-* **배포 인프라:**
-  * **Serverless / Container:** AWS Lambda + API Gateway 또는 AWS ECS Fargate
-  * **CDN / Hosting:** Vercel 또는 AWS S3 + CloudFront (웹 뷰어 호스팅)
+  * **Model:** Google Gemini 3.5 Flash API (Multimodal 이미지 및 텍스트 구조화 동시 처리)
+* **배포 인프라 (Docker & Cloudflare):**
+  * **Orchestration:** Docker Compose (Nginx 프록시: Host 20080 포트, Express 백엔드: Host 5000 포트, Redis: 6379 포트)
+  * **Reverse Proxy:** Nginx (Static Web Viewer 서빙 + `/api` 리버스 프록시 연동)
+  * **Tunneling:** Cloudflare Tunnel (`qrdoc.devbeaver.cloud` -> Nginx `20080` 포트 포워딩)
 
 ---
 
@@ -62,11 +68,11 @@
    * **[보안 보완] 조회 즉시 파기:** 중계 서버는 해당 `GET /api/share/:dataId` 요청을 처리한 즉시 Redis에서 데이터를 영구 삭제하여 재조회 공격을 방지한다.
    * 브라우저는 주소창의 `#` 뒤에 붙은 `Secret_Key`를 가져와 `Web Crypto API`로 복호화하여 화면에 출력한다.
 
-### 3.2 Gemini 1.5 Flash를 이용한 단일 파이프라인 OCR (Proxy Architecture)
+### 3.2 Gemini 3.5 Flash를 이용한 단일 파이프라인 OCR (Proxy Architecture)
 1. **이미지 처리:** Flutter `camera` 패키지를 통해 처방전을 촬영한 후, `flutter_image_compress`를 통해 2MB 이하의 JPEG 이미지로 압축 및 인코딩한다.
 2. **Gemini API Proxy 호출 (보안):**
    * 모바일 앱 내 API Key 노출 방지를 위해 Flutter 앱은 이미지 바이너리를 Node.js 중계 서버의 `/api/ocr` 엔드포인트로 전송한다.
-   * 서버는 수신한 이미지를 환경 변수로 주입된 `GEMINI_API_KEY`를 통해 Gemini 1.5 Flash API로 안전하게 전달한다.
+   * 서버는 수신한 이미지를 환경 변수로 주입된 `GEMINI_API_KEY`를 통해 Gemini 3.5 Flash API로 안전하게 전달한다.
    * 서버는 데이터 보안을 위해 원본 이미지와 추출된 데이터를 로깅하거나 디스크에 임시 저장하지 않는다.
 3. **구조화 프롬프트 및 스키마 강제 (Structured Outputs):**
    * **Prompt:** *"너는 대한민국 의료 처방전 전문 데이터 파서다. 이미지 내의 민감한 환자 식별 정보(주민번호 등)를 제외하고, 복용 약물 목록과 진단 내역만 추출하여 완벽한 JSON 포맷으로 반환하라. 확실하지 않은 약물 정보는 빈 값으로 두지 말고 필드 값을 'UNKNOWN'으로 채워라. 억지로 유추하지 말 것."*
