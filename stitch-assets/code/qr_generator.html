@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QRDoc - 바이탈패스</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Atkinson+Hyperlegible+Next:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#006a61",
+                      "background": "#faf8ff",
+                      "on-tertiary-fixed": "#380d00",
+                      "primary-container": "#1a56db",
+                      "surface-container-highest": "#e2e1ed",
+                      "on-primary-container": "#d4dcff",
+                      "tertiary-fixed": "#ffdbcf",
+                      "primary-fixed": "#dbe1ff",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "inverse-on-surface": "#f0f0fb",
+                      "tertiary-container": "#ad3b00",
+                      "secondary-fixed-dim": "#6bd8cb",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#ededf8",
+                      "on-primary-fixed": "#00174d",
+                      "surface": "#faf8ff",
+                      "error": "#ba1a1a",
+                      "on-primary-fixed-variant": "#003dab",
+                      "on-error-container": "#93000a",
+                      "surface-dim": "#d9d9e4",
+                      "on-background": "#191b23",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#ffd4c5",
+                      "surface-tint": "#1353d8",
+                      "primary": "#003fb1",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#802a00",
+                      "tertiary-fixed-dim": "#ffb59a",
+                      "tertiary": "#852b00",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#434654",
+                      "outline-variant": "#c3c5d7",
+                      "secondary-fixed": "#89f5e7",
+                      "on-surface": "#191b23",
+                      "surface-variant": "#e2e1ed",
+                      "inverse-primary": "#b5c4ff",
+                      "on-secondary-fixed": "#00201d",
+                      "surface-bright": "#faf8ff",
+                      "surface-container-high": "#e7e7f3",
+                      "secondary-container": "#86f2e4",
+                      "on-primary": "#ffffff",
+                      "inverse-surface": "#2e3039",
+                      "on-secondary-fixed-variant": "#005049",
+                      "surface-container-low": "#f3f3fe",
+                      "surface-container-lowest": "#ffffff",
+                      "outline": "#737686",
+                      "on-secondary-container": "#006f66",
+                      "amber": "#fbbf24" // Added for the requested amber color
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "sm": "12px",
+                      "container-max": "1200px",
+                      "lg": "32px",
+                      "xl": "48px",
+                      "md": "20px",
+                      "touch-target": "48px",
+                      "gutter": "24px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "caption": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Atkinson Hyperlegible Next"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-lg": [
+                              "Atkinson Hyperlegible Next"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "18px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-lg flex flex-col items-center">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline flex items-center justify-between px-md w-full h-14 md:hidden sticky top-0 z-50">
+<button aria-label="Go back" class="h-touch-target w-touch-target flex items-center justify-center text-primary dark:text-inverse-primary hover:bg-surface-container-low transition-colors rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight">QRDoc</h1>
+<div class="h-touch-target w-touch-target flex items-center justify-center">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar image of a professional looking individual, representing the user profile in a clean, clinical setting. High key lighting, simple background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf7W0WdHNHvTlKI_Ws_Bstp6hPmsbQaFChlaL-x4uxbnq7RFgr7KhJh6j4p2JGo6dnV-728ypo1OtBYuqw-JgQDCLkcC2ZWuqVDzJ0C6oftSscIXSprBGrwhHSL0Xe4YBIF3wIYL5mi_sEhzhfEcpX5JwZlBqXJodM_-yAEStlefNDEFzVGs0-RrVo2cgP8skySG8sVWXjUj1a2uxXDK8yoQ-nJU-aWs9o4ou270u-7SpTCtD1FEaE"/>
+</div>
+</header>
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline hidden md:flex items-center justify-between px-md w-full h-14 sticky top-0 z-50 max-w-container-max mx-auto">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight">QRDoc</h1>
+<nav class="flex gap-4">
+<!-- Placeholder for desktop nav items if needed -->
+</nav>
+<div class="h-touch-target w-touch-target flex items-center justify-center">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar image of a professional looking individual, representing the user profile in a clean, clinical setting. High key lighting, simple background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAAqADL6r-SJ0wWBDkrBINdDkRM2GWaqKw_AY8HjzHJaMAB-Wr8kafIA_a0Cr7KFVQyhIDE9__5dFCERcQeraSibZ56Ki7ScxlfkWPKFFsg31kdMOWfKg3f-Z_sGRjCRGY2JeJ0w-aHoqL6gMhs-jR5N5zmA0iJYMewD6WuZ3CoYWQr82pUkrK90BAoKkHrGMbSBanX4AJ0suHFmTbypL9PJquc_D0I4PxtxJqNZtIjlOY4_xUKuvb"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max px-md py-lg flex flex-col items-center justify-center">
+<div class="text-center mb-xl w-full max-w-md">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-primary mb-sm">바이탈패스</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">의료진에게 이 QR 코드를 보여주어 안전하게 정보를 전달하세요.</p>
+</div>
+<!-- QR Vault Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-[16px] shadow-sm p-lg flex flex-col items-center relative overflow-hidden w-full max-w-sm mb-xl">
+<!-- Security Badge -->
+<div class="absolute top-4 right-4 flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-[16px] text-primary" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-caption text-caption text-primary">암호화됨</span>
+</div>
+<!-- QR Code Placeholder -->
+<div class="w-64 h-64 bg-surface-container-high rounded-lg mb-lg flex items-center justify-center mt-xl border border-outline-variant relative group">
+<img class="w-full h-full object-contain p-4 opacity-50 blur-[2px] transition-all duration-300 group-hover:blur-none group-hover:opacity-100" data-alt="A clean, high-contrast, black and white QR code centered on a white background, suggesting secure medical data transmission in a clinical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOsbGkP0dYThrIgkUFXlTDnyY-x-QQ_NaHPW5cLrTZveNyJw8Zf-t17-Iyw0wueXJLSSiwJrRugPLnbG6ExFQcuwdJkAyAfmZSirg7uV1fmzRRqeuP2-HZdYv9K9zputrfNPqVI1lJmA6c_t0TmfR2X1_fVQfx78BcgKyM8NuftAbgG8o5oafKbZNKXL58qAA9vkVbIb6ga_PSz3YT_Q7ENRUi_gZyZRUlcBxORZKYX3T4nHG5nwYg"/>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300">
+<span class="material-symbols-outlined text-display-lg text-outline" style="font-variation-settings: 'FILL' 0;">qr_code_scanner</span>
+</div>
+</div>
+<!-- Countdown Timer -->
+<div class="flex flex-col items-center mb-md">
+<div class="relative w-24 h-24 flex items-center justify-center mb-sm">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="text-surface-variant" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-amber transition-all duration-1000 ease-linear" cx="50" cy="50" fill="none" id="progress-circle" r="45" stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="100" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center flex-col">
+<span class="font-label-lg text-label-lg text-amber" id="time-display">02:45</span>
+</div>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">남은 시간</span>
+</div>
+<!-- Security Badges -->
+<div class="flex flex-wrap justify-center gap-2 w-full mt-4">
+<div class="flex items-center gap-1 bg-surface-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">shield</span>
+<span class="font-caption text-caption text-on-surface-variant">종단간 암호화</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">timer</span>
+<span class="font-caption text-caption text-on-surface-variant">일회용</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">local_fire_department</span>
+<span class="font-caption text-caption text-on-surface-variant">조회 후 파기</span>
+</div>
+</div>
+</div>
+<!-- Cancel Action -->
+<button aria-label="바이탈패스 생성 취소" class="h-[56px] px-xl border border-error text-error hover:bg-error-container hover:text-on-error-container transition-colors rounded-full font-label-lg text-label-lg flex items-center justify-center w-full max-w-sm">
+            취소
+        </button>
+</main>
+<script>
+        // Simple mock countdown animation logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const circle = document.getElementById('progress-circle');
+            const timeDisplay = document.getElementById('time-display');
+            const totalSeconds = 2 * 60 + 45; // 02:45
+            let currentSeconds = totalSeconds;
+            const circumference = 2 * Math.PI * 45;
+
+            circle.style.strokeDasharray = circumference;
+
+            const interval = setInterval(() => {
+                currentSeconds--;
+                if (currentSeconds <= 0) {
+                    clearInterval(interval);
+                    currentSeconds = 0;
+                }
+
+                const minutes = Math.floor(currentSeconds / 60);
+                const seconds = currentSeconds % 60;
+                timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+                const offset = circumference - (currentSeconds / totalSeconds) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }, 1000);
+        });
+    </script>
+</body></html>

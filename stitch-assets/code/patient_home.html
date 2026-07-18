@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QRDoc - 홈</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary": "#006a61",
+                        "background": "#faf8ff",
+                        "on-tertiary-fixed": "#380d00",
+                        "primary-container": "#1a56db",
+                        "surface-container-highest": "#e2e1ed",
+                        "on-primary-container": "#d4dcff",
+                        "tertiary-fixed": "#ffdbcf",
+                        "primary-fixed": "#dbe1ff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "inverse-on-surface": "#f0f0fb",
+                        "tertiary-container": "#ad3b00",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#ededf8",
+                        "on-primary-fixed": "#00174d",
+                        "surface": "#faf8ff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-error-container": "#93000a",
+                        "surface-dim": "#d9d9e4",
+                        "on-background": "#191b23",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ffd4c5",
+                        "surface-tint": "#1353d8",
+                        "primary": "#003fb1",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#802a00",
+                        "tertiary-fixed-dim": "#ffb59a",
+                        "tertiary": "#852b00",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#434654",
+                        "outline-variant": "#c3c5d7",
+                        "secondary-fixed": "#89f5e7",
+                        "on-surface": "#191b23",
+                        "surface-variant": "#e2e1ed",
+                        "inverse-primary": "#b5c4ff",
+                        "on-secondary-fixed": "#00201d",
+                        "surface-bright": "#faf8ff",
+                        "surface-container-high": "#e7e7f3",
+                        "secondary-container": "#86f2e4",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2e3039",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container-low": "#f3f3fe",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#737686",
+                        "on-secondary-container": "#006f66"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xs": "4px",
+                        "sm": "12px",
+                        "container-max": "1200px",
+                        "lg": "32px",
+                        "xl": "48px",
+                        "md": "20px",
+                        "touch-target": "48px",
+                        "gutter": "24px",
+                        "base": "8px"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "label-md": ["Atkinson Hyperlegible Next"],
+                        "headline-lg": ["Inter"],
+                        "label-lg": ["Atkinson Hyperlegible Next"],
+                        "display-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "caption": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "label-md": ["14px", { lineHeight: "18px", letterSpacing: "0.02em", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "700" }],
+                        "label-lg": ["16px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        .touch-target {
+            min-height: theme('spacing.touch-target');
+            min-width: theme('spacing.touch-target');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen pb-[80px]"> <!-- Padding bottom for Fixed Bottom Nav -->
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline flex items-center justify-between px-md w-full h-14 docked full-width top-0 sticky z-40">
+<div class="flex items-center gap-sm text-primary dark:text-inverse-primary hover:bg-surface-container-low transition-colors rounded-full p-1 cursor-pointer">
+<span class="material-symbols-outlined touch-target flex items-center justify-center">arrow_back</span>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">QRDoc</h1>
+<div class="flex items-center gap-sm text-primary dark:text-inverse-primary hover:bg-surface-container-low transition-colors rounded-full p-1 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="max-w-container-max mx-auto px-md py-lg flex flex-col gap-xl">
+<!-- Hero Section -->
+<section class="flex flex-col items-center justify-center text-center py-xl bg-surface-container-low rounded-xl border border-outline-variant">
+<span class="material-symbols-outlined text-display-lg text-primary mb-md" style="font-variation-settings: 'FILL' 1;">lock</span>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-base">안전한 건강 정보 지갑</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">암호화된 의료 기록과 처방전을 안전하게 보관하고 필요할 때 바로 확인하세요.</p>
+</section>
+<!-- Main Action -->
+<section>
+<button class="w-full bg-primary-container text-on-primary-container hover:bg-surface-tint rounded-xl flex items-center justify-center gap-sm px-lg py-md shadow-md transition-all touch-target">
+<span class="material-symbols-outlined text-display-lg">photo_camera</span>
+<span class="font-headline-md text-headline-md">새 처방전 스캔하기</span>
+</button>
+</section>
+<!-- Recent Records -->
+<section class="flex flex-col gap-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">최근 기록</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Record Card 1 -->
+<div class="bg-surface rounded-xl border border-outline-variant p-md shadow-[0_4px_15px_rgba(26,86,219,0.04)] relative">
+<div class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="font-label-md text-label-md">AI 인증됨</span>
+</div>
+<div class="flex items-start gap-md mt-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">medication</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Amoxicillin</h4>
+<p class="font-body-lg text-body-lg text-on-surface-variant">500mg • 항생제</p>
+<p class="font-caption text-caption text-outline mt-xs">추가됨: 2023년 10월 24일</p>
+</div>
+</div>
+</div>
+<!-- Record Card 2 -->
+<div class="bg-surface rounded-xl border border-outline-variant p-md shadow-[0_4px_15px_rgba(26,86,219,0.04)] relative">
+<div class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span class="font-label-md text-label-md">AI 인증됨</span>
+</div>
+<div class="flex items-start gap-md mt-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">medication</span>
+</div>
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface">Lisinopril</h4>
+<p class="font-body-lg text-body-lg text-on-surface-variant">10mg • 혈압약</p>
+<p class="font-caption text-caption text-outline mt-xs">추가됨: 2023년 10월 15일</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-surface-dim border-t border-outline-variant dark:border-outline shadow-md fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 rounded-t-xl md:hidden">
+<div class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 hover:bg-surface-container-highest transition-all scale-90 duration-150 cursor-pointer touch-target">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-label-md mt-xs">홈</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer touch-target">
+<span class="material-symbols-outlined">folder_managed</span>
+<span class="font-label-md text-label-md mt-xs">기록</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-highest transition-all cursor-pointer touch-target">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md mt-xs">프로필</span>
+</div>
+</nav>
+</body></html>

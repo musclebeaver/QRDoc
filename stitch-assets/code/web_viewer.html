@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QRDoc | 의료 데이터 뷰어</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#006a61",
+                    "background": "#faf8ff",
+                    "on-tertiary-fixed": "#380d00",
+                    "primary-container": "#1a56db",
+                    "surface-container-highest": "#e2e1ed",
+                    "on-primary-container": "#d4dcff",
+                    "tertiary-fixed": "#ffdbcf",
+                    "primary-fixed": "#dbe1ff",
+                    "primary-fixed-dim": "#b5c4ff",
+                    "inverse-on-surface": "#f0f0fb",
+                    "tertiary-container": "#ad3b00",
+                    "secondary-fixed-dim": "#6bd8cb",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#ededf8",
+                    "on-primary-fixed": "#00174d",
+                    "surface": "#faf8ff",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#003dab",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#d9d9e4",
+                    "on-background": "#191b23",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#ffd4c5",
+                    "surface-tint": "#1353d8",
+                    "primary": "#003fb1",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#802a00",
+                    "tertiary-fixed-dim": "#ffb59a",
+                    "tertiary": "#852b00",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#434654",
+                    "outline-variant": "#c3c5d7",
+                    "secondary-fixed": "#89f5e7",
+                    "on-surface": "#191b23",
+                    "surface-variant": "#e2e1ed",
+                    "inverse-primary": "#b5c4ff",
+                    "on-secondary-fixed": "#00201d",
+                    "surface-bright": "#faf8ff",
+                    "surface-container-high": "#e7e7f3",
+                    "secondary-container": "#86f2e4",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2e3039",
+                    "on-secondary-fixed-variant": "#005049",
+                    "surface-container-low": "#f3f3fe",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#737686",
+                    "on-secondary-container": "#006f66"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "sm": "12px",
+                    "container-max": "1200px",
+                    "lg": "32px",
+                    "xl": "48px",
+                    "md": "20px",
+                    "touch-target": "48px",
+                    "gutter": "24px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "body-lg": [
+                            "Inter", "sans-serif"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter", "sans-serif"
+                    ],
+                    "headline-md": [
+                            "Inter", "sans-serif"
+                    ],
+                    "body-md": [
+                            "Inter", "sans-serif"
+                    ],
+                    "caption": [
+                            "Inter", "sans-serif"
+                    ],
+                    "label-md": [
+                            "Atkinson Hyperlegible Next", "sans-serif"
+                    ],
+                    "headline-lg": [
+                            "Inter", "sans-serif"
+                    ],
+                    "label-lg": [
+                            "Atkinson Hyperlegible Next", "sans-serif"
+                    ],
+                    "display-lg": [
+                            "Inter", "sans-serif"
+                    ]
+            },
+            "fontSize": {
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "caption": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "18px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "label-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "20px",
+                                    "letterSpacing": "0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            font-feature-settings: 'liga';
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Custom Shadows for Medical Cards */
+        .shadow-medical-card {
+            box-shadow: 0px 4px 15px rgba(26, 86, 219, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar JSON Component implementation for transactional/focused view -->
+<header class="bg-surface border-b border-outline-variant flex items-center justify-between px-md w-full h-14 sticky top-0 z-50">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-low transition-colors rounded-full p-1" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+<div class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+                QRDoc
+            </div>
+<span class="font-label-lg text-label-lg text-on-surface-variant ml-2 border-l border-outline-variant pl-4 hidden sm:block">의료 데이터 뷰어</span>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-label-md text-label-md">
+                 DR
+             </div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-container-max mx-auto px-md py-xl space-y-xl">
+<!-- Security Header -->
+<section class="bg-error-container border border-error rounded-xl p-md flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 shadow-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTIgMkgwdjRoMnY0aDJ2LTRoMnYyaC0ydjJoNHYyaC0ydjRMMiAxMHY0SDJWOGg0VjZINHY0SDJWMnoiIGZpbGw9IiM5MzAwMGEiIGZpbGwtb3BhY2l0eT0iMC4wNSIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+')] opacity-20 pointer-events-none"></div>
+<div class="flex items-center gap-md z-10">
+<div class="w-12 h-12 rounded-full bg-error text-on-error flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security_update_warning</span>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-error-container m-0">복호화된 세션</h2>
+<p class="font-body-md text-body-md text-on-error-container opacity-90 m-0">휘발성 데이터 (조회 후 즉시 파기)</p>
+</div>
+</div>
+<div class="flex items-center gap-md z-10 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 sm:border-l border-error pt-4 sm:pt-0 sm:pl-md border-opacity-30">
+<div class="text-center">
+<span class="block font-label-md text-label-md text-on-error-container uppercase tracking-wider mb-1">세션 만료까지</span>
+<div class="font-display-lg text-display-lg text-error" id="session-timer">02:30</div>
+</div>
+</div>
+</section>
+<!-- Patient Summary -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-medical-card relative">
+<div class="absolute top-md right-md bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full flex items-center gap-2 font-label-md text-label-md border border-secondary/20">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                본인 인증 완료
+            </div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface mb-lg flex items-center gap-sm pb-sm border-b border-surface-variant">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">patient_list</span>
+                환자 요약 정보
+            </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
+<div class="flex items-start gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>
+</div>
+<div>
+<span class="block font-label-md text-label-md text-on-surface-variant mb-1">성함</span>
+<span class="block font-body-lg text-body-lg text-on-surface font-semibold">John Doe</span>
+</div>
+</div>
+<div class="flex items-start gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+</div>
+<div>
+<span class="block font-label-md text-label-md text-on-surface-variant mb-1">생년월일</span>
+<span class="block font-body-lg text-body-lg text-on-surface font-semibold">1975-05-12</span>
+</div>
+</div>
+<div class="flex items-start gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bloodtype</span>
+</div>
+<div>
+<span class="block font-label-md text-label-md text-on-surface-variant mb-1">혈액형</span>
+<span class="block font-body-lg text-body-lg text-primary font-bold">A+</span>
+</div>
+</div>
+<div class="flex items-start gap-sm">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_information</span>
+</div>
+<div>
+<span class="block font-label-md text-label-md text-on-surface-variant mb-1">알레르기</span>
+<span class="block font-body-lg text-body-lg text-error font-semibold">Penicillin</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Medication History Table -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-medical-card overflow-hidden">
+<div class="p-lg border-b border-surface-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-md text-headline-md text-on-surface m-0 flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">prescriptions</span>
+                    복약 이력
+                </h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface border-b border-outline-variant">
+<th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">약물명</th>
+<th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">용량</th>
+<th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">복용 횟수</th>
+<th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">등록일</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y divide-surface-variant">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">pill</span>
+</div>
+<span class="font-semibold text-primary">Lisinopril</span>
+</td>
+<td class="p-md">10 mg</td>
+<td class="p-md text-on-surface-variant">Once daily</td>
+<td class="p-md text-on-surface-variant">2023-01-15</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">pill</span>
+</div>
+<span class="font-semibold text-primary">Metformin</span>
+</td>
+<td class="p-md">500 mg</td>
+<td class="p-md text-on-surface-variant">Twice daily</td>
+<td class="p-md text-on-surface-variant">2022-11-02</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">medication</span>
+</div>
+<span class="font-semibold text-primary">Atorvastatin</span>
+</td>
+<td class="p-md">20 mg</td>
+<td class="p-md text-on-surface-variant">Once daily (evening)</td>
+<td class="p-md text-on-surface-variant">2023-03-20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Actions -->
+<section class="flex justify-end pt-md">
+<button class="bg-error text-on-error h-[48px] px-xl rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-on-error-container transition-colors shadow-md active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">cancel</span>
+                세션 종료
+            </button>
+</section>
+</main>
+<script>
+        // Simple timer logic
+        let timeInSeconds = 150; // 2:30
+        const timerDisplay = document.getElementById('session-timer');
+
+        const interval = setInterval(() => {
+            timeInSeconds--;
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+            
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if(timeInSeconds <= 60) {
+                timerDisplay.classList.add('animate-pulse');
+            }
+
+            if (timeInSeconds <= 0) {
+                clearInterval(interval);
+                timerDisplay.textContent = "00:00";
+                alert("Session Expired.");
+                // In a real app, this would trigger a redirect or data wipe
+            }
+        }, 1000);
+    </script>
+</body></html>
