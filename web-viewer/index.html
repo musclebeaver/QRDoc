@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRDoc Secure Health Viewer</title>
+    <meta name="description" content="Gemini AI 기반 암호화 의료 데이터 안전 열람 시스템. 환자의 건강 정보 및 복약 이력을 일회성 복호화로 확인합니다.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <!-- Background glow elements -->
+    <div class="glow-bg">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="app-container" id="main-container">
+        <!-- Top Status Bar (Timer & Connection Info) -->
+        <header class="header">
+            <div class="logo-area">
+                <span class="pulse-indicator"></span>
+                <h1>QRDoc <span class="accent-text">Viewer</span></h1>
+            </div>
+            <!-- Countdown Timer -->
+            <div class="timer-box" id="timer-box">
+                <svg class="progress-ring" width="36" height="36">
+                    <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="3" fill="transparent" r="14" cx="18" cy="18" />
+                    <circle class="progress-ring__circle" id="timer-ring" stroke="var(--primary-color)" stroke-width="3" fill="transparent" r="14" cx="18" cy="18" />
+                </svg>
+                <div class="timer-text">
+                    <span class="label">남은 시간</span>
+                    <span class="time" id="countdown-timer">03:00</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <section class="loading-state" id="loading-state">
+            <div class="spinner-box">
+                <div class="spinner"></div>
+            </div>
+            <p>환자 데이터 수신 중...</p>
+            <span class="subtext">안전한 Zero-Knowledge 채널을 통해 복호화를 준비 중입니다.</span>
+        </section>
+
+        <!-- Error State -->
+        <section class="error-state hidden" id="error-state">
+            <div class="error-icon">⚠️</div>
+            <h2 id="error-title">조회 불가</h2>
+            <p id="error-message">데이터가 만료되었거나 올바르지 않은 접근입니다.</p>
+            <span class="subtext">본 페이지는 3분이 지나면 자동 휘발되어 접근할 수 없습니다.</span>
+        </section>
+
+        <!-- Main Dashboard (Decrypted Content) -->
+        <section class="dashboard hidden" id="dashboard">
+            <div class="dashboard-grid">
+                <!-- Left Column: Patient Profile & Allergies -->
+                <div class="grid-left">
+                    <!-- Profile Card -->
+                    <div class="glass-card profile-card">
+                        <div class="card-header">
+                            <span class="icon">👤</span>
+                            <h3>환자 기본 정보</h3>
+                        </div>
+                        <div class="profile-info">
+                            <div class="info-group">
+                                <span class="info-label">이름</span>
+                                <span class="info-value" id="patient-name">-</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">생년월일</span>
+                                <span class="info-value" id="patient-birth">-</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">혈액형</span>
+                                <span class="info-value accent-badge" id="patient-blood">-</span>
+                            </div>
+                            <div class="info-group">
+                                <span class="info-label">긴급 연락처</span>
+                                <span class="info-value" id="patient-emergency">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Alerts Card -->
+                    <div class="glass-card alert-card">
+                        <div class="card-header">
+                            <span class="icon">⚠️</span>
+                            <h3>핵심 기왕증 및 알레르기</h3>
+                        </div>
+                        <div class="alert-section">
+                            <h4>지병 (만성질환)</h4>
+                            <div class="badge-container" id="chronic-diseases-container">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+                        <div class="alert-section">
+                            <h4>알레르기 정보</h4>
+                            <div class="badge-container" id="allergies-container">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Medication Logs -->
+                <div class="grid-right">
+                    <div class="glass-card medication-card">
+                        <div class="card-header">
+                            <span class="icon">💊</span>
+                            <h3>최근 복용 약물 내역</h3>
+                            <span class="source-badge">Gemini OCR</span>
+                        </div>
+                        <div class="medication-list-wrapper">
+                            <table class="medication-table">
+                                <thead>
+                                    <tr>
+                                        <th>약물명</th>
+                                        <th>1회 용량</th>
+                                        <th>일 복용 횟수</th>
+                                        <th>총 복용일</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="medication-list">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expiry Warning Toast -->
+        <div class="warning-toast hidden" id="warning-toast">
+            🔒 세션 만료가 30초 남았습니다. 데이터 복사 시 주의해 주세요.
+        </div>
+    </main>
+
+    <!-- Session Terminated Overlay -->
+    <section class="expired-overlay hidden" id="expired-overlay">
+        <div class="expired-card">
+            <div class="lock-icon">🔒</div>
+            <h2>세션이 완전히 종료되었습니다</h2>
+            <p>보안 규정에 따라 데이터가 브라우저 메모리 및 서버에서 영구 파기되었습니다.</p>
+            <span class="subtext">재조회하려면 환자의 새로운 QR 코드를 다시 스캔해 주십시오.</span>
+            <button onclick="window.close()" class="btn-close" id="btn-close-window">창 닫기</button>
+        </div>
+    </section>
+
+    <!-- Custom Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
