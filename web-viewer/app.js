@@ -1,5 +1,5 @@
 const API_BASE_URL = (window.location.protocol === 'file:')
-    ? 'http://localhost:8888/api'
+    ? 'http://localhost:5000/api'
     : '/api'; // Relative route for Nginx proxy on same host/port
 
 

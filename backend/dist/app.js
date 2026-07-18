@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const path_1 = __importDefault(require("path"));
 const redis_1 = require("./config/redis");
 const share_1 = __importDefault(require("./routes/share"));
 const ocr_1 = __importDefault(require("./routes/ocr"));
@@ -19,6 +20,8 @@ app.use((0, cors_1.default)({
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+// Serve static web viewer files
+app.use(express_1.default.static(path_1.default.join(__dirname, '../../web-viewer')));
 // Health check endpoint
 app.get('/health', async (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
