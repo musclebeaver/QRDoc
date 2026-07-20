@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../main.dart'; // To access the global localStorage singleton
+import 'edit_profile_screen.dart';
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
 import 'qr_generator_screen.dart';
@@ -853,34 +854,66 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   )
                 ],
               ),
-              child: Column(
+              child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: primaryColor.withOpacity(0.1),
-                    child: const Icon(Icons.person, size: 40, color: primaryColor),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _profile.name,
-                    style: const TextStyle(
-                      color: onSurfaceColor,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  // Positioned Edit Button on the top right
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_note, color: primaryColor, size: 28),
+                      tooltip: '프로필 수정',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => EditProfileScreen(
+                              profile: _profile,
+                              onSave: (updatedProfile) async {
+                                await localStorage.saveProfile(updatedProfile);
+                                _loadLocalData(); // Refresh UI State
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('프로필 정보가 수정되었습니다.')),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '생년월일: ${_profile.birthDate}',
-                    style: const TextStyle(color: onSurfaceVariant, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '혈액형: ${_profile.bloodType}',
-                    style: const TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  Align(
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: primaryColor.withOpacity(0.1),
+                          child: const Icon(Icons.person, size: 40, color: primaryColor),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _profile.name,
+                          style: const TextStyle(
+                            color: onSurfaceColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '생년월일: ${_profile.birthDate}',
+                          style: const TextStyle(color: onSurfaceVariant, fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '혈액형: ${_profile.bloodType}',
+                          style: const TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
