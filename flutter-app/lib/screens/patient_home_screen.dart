@@ -6,6 +6,8 @@ import '../main.dart'; // To access the global localStorage singleton
 import 'edit_profile_screen.dart';
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
+import '../models/diagnosis_log.dart';
+import 'diagnosis_review_screen.dart';
 import 'qr_generator_screen.dart';
 import 'ai_review_screen.dart';
 import 'emergency_pass_screen.dart';
@@ -48,6 +50,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   // Dynamic Medication Logs list in State
   List<MedicationLog> _medications = [];
+  List<DiagnosisLog> _diagnoses = [];
+  int _recordsSubTabIndex = 0; // 0: medications, 1: diagnoses
   int _currentIndex = 0;
   bool _isEmergencyPassEnabled = false;
 
@@ -57,15 +61,17 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     _loadLocalData();
   }
 
-  // Load profile and medication logs from encrypted Hive storage
+  // Load profile, medication logs, and diagnoses from encrypted Hive storage
   void _loadLocalData() {
     final savedProfile = localStorage.getProfile();
     final savedMedications = localStorage.getMedications();
+    final savedDiagnoses = localStorage.getDiagnoses();
     setState(() {
       if (savedProfile != null) {
         _profile = savedProfile;
       }
       _medications = savedMedications;
+      _diagnoses = savedDiagnoses;
     });
   }
 
@@ -105,8 +111,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         Navigator.of(context).pop(); // Dismiss loading dialog
       }
 
-      // 4. Map OCR JSON result to list of MedicationLogs
+      // 4. Map OCR JSON result to lists of MedicationLogs & DiagnosisLogs
+      final String documentType = result['documentType'] ?? 'UNKNOWN';
       final List<dynamic> medicationsJson = result['medications'] ?? [];
+      final List<dynamic> diagnosesJson = result['diagnoses'] ?? [];
+
       final List<MedicationLog> parsedLogs = medicationsJson.map((m) {
         return MedicationLog(
           id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (m['medicineName'] ?? 'med'),
@@ -120,33 +129,67 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         );
       }).toList();
 
-      if (parsedLogs.isEmpty) {
+      final List<DiagnosisLog> parsedDiagnoses = diagnosesJson.map((d) {
+        return DiagnosisLog(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (d['diseaseName'] ?? 'diag'),
+          diseaseName: d['diseaseName'] ?? '알 수 없는 진단',
+          diseaseCode: d['diseaseCode'] ?? 'UNKNOWN',
+          diagnosisDate: d['diagnosisDate'] ?? result['prescriptionDate'] ?? DateTime.now().toIso8601String().split('T')[0],
+          hospitalName: d['hospitalName'] ?? '미지정 병원',
+          doctorOpinion: d['doctorOpinion'] ?? '',
+          inputMethod: 'GEMINI_AI_OCR',
+          isActive: true,
+        );
+      }).toList();
+
+      if (parsedLogs.isEmpty && parsedDiagnoses.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('인식된 약물이 없습니다. 직접 입력해서 추가해 주세요.')),
+            const SnackBar(content: Text('인식된 복약 기록 또는 진단 정보가 없습니다. 직접 입력해서 추가해 주세요.')),
           );
         }
         return;
       }
 
-      // 5. Route to Batch AI Review Screen
+      // 5. Route to appropriate screen based on OCR findings
       if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => AiReviewScreen(
-            initialLogs: parsedLogs,
-            onSave: (newLogs) async {
-              for (var log in newLogs) {
-                await localStorage.saveMedication(log);
-              }
-              _loadLocalData(); // Refresh local list
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
-              );
-            },
+      if (parsedDiagnoses.isNotEmpty && (parsedLogs.isEmpty || documentType == 'MEDICAL_CERTIFICATE')) {
+        // Route to Diagnosis Review Screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => DiagnosisReviewScreen(
+              initialLogs: parsedDiagnoses,
+              onSave: (newDiags) async {
+                for (var diag in newDiags) {
+                  await localStorage.saveDiagnosis(diag);
+                }
+                _loadLocalData(); // Refresh UI
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('새로운 진단 정보가 추가되었습니다!')),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Route to Medications Review Screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiReviewScreen(
+              initialLogs: parsedLogs,
+              onSave: (newLogs) async {
+                for (var log in newLogs) {
+                  await localStorage.saveMedication(log);
+                }
+                _loadLocalData(); // Refresh UI
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
+                );
+              },
+            ),
+          ),
+        );
+      }
 
     } catch (e) {
       if (mounted) {
@@ -260,7 +303,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  '복약 기록 추가 방식 선택',
+                  '건강 기록 추가 방식 선택',
                   style: TextStyle(
                     color: onSurfaceColor,
                     fontSize: 18,
@@ -278,33 +321,33 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   },
                   borderRadius: BorderRadius.circular(12.0),
                   child: Container(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
                       border: Border.all(color: outlineVariant),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.photo_camera, color: primaryColor, size: 28),
-                        const SizedBox(width: 16),
+                        const Icon(Icons.photo_camera, color: primaryColor, size: 24),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: const [
                               Text(
-                                '📷 카메라로 처방전 스캔',
+                                '📷 카메라로 문서 스캔',
                                 style: TextStyle(
                                   color: onSurfaceColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: 2),
                               Text(
-                                '처방전 사진을 즉석에서 촬영하여 약물을 인식합니다.',
+                                '처방전 또는 진단서 사진을 촬영하여 자동 인식합니다.',
                                 style: TextStyle(
                                   color: onSurfaceVariant,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
@@ -314,7 +357,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
 
                 // Option 2: Gallery Picker
                 InkWell(
@@ -324,15 +367,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   },
                   borderRadius: BorderRadius.circular(12.0),
                   child: Container(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
                       border: Border.all(color: outlineVariant),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.photo_library, color: primaryColor, size: 28),
-                        const SizedBox(width: 16),
+                        const Icon(Icons.photo_library, color: primaryColor, size: 24),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,15 +385,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                 style: TextStyle(
                                   color: onSurfaceColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: 2),
                               Text(
-                                '이미 찍어둔 처방전 앨범 사진에서 정보를 추출합니다.',
+                                '저장해둔 처방전 또는 진단서 이미지에서 정보를 분석합니다.',
                                 style: TextStyle(
                                   color: onSurfaceVariant,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
@@ -360,9 +403,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 
-                // Option 3: Manual Input
+                // Option 3: Manual Medication Input
                 InkWell(
                   onTap: () {
                     Navigator.of(context).pop();
@@ -370,33 +413,79 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   },
                   borderRadius: BorderRadius.circular(12.0),
                   child: Container(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
                       border: Border.all(color: outlineVariant),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_note, color: secondaryColor, size: 28),
-                        const SizedBox(width: 16),
+                        const Icon(Icons.edit_note, color: secondaryColor, size: 24),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: const [
                               Text(
-                                '✏️ 직접 입력하여 추가',
+                                '💊 복약 기록 직접 추가',
                                 style: TextStyle(
                                   color: onSurfaceColor,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 15,
+                                  fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              SizedBox(height: 2),
                               Text(
-                                '약물명과 복용 방법을 수동으로 직접 기입합니다.',
+                                '약물명과 복용 방법 등을 수동으로 직접 기입합니다.',
                                 style: TextStyle(
                                   color: onSurfaceVariant,
-                                  fontSize: 12,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Option 4: Manual Diagnosis Input
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _addDiagnosisManually();
+                  },
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(12.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: outlineVariant),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.description, color: primaryColor, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                '🩺 진단서 직접 추가',
+                                style: TextStyle(
+                                  color: onSurfaceColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                '확진 병명, 질병 코드, 진단 병원 등을 수동으로 직접 기입합니다.',
+                                style: TextStyle(
+                                  color: onSurfaceVariant,
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
@@ -450,8 +539,11 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         Navigator.of(context).pop(); // Dismiss loading dialog
       }
 
-      // 4. Map OCR JSON result to list of MedicationLogs
+      // 4. Map OCR JSON result to lists of MedicationLogs & DiagnosisLogs
+      final String documentType = result['documentType'] ?? 'UNKNOWN';
       final List<dynamic> medicationsJson = result['medications'] ?? [];
+      final List<dynamic> diagnosesJson = result['diagnoses'] ?? [];
+
       final List<MedicationLog> parsedLogs = medicationsJson.map((m) {
         return MedicationLog(
           id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (m['medicineName'] ?? 'med'),
@@ -465,33 +557,67 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         );
       }).toList();
 
-      if (parsedLogs.isEmpty) {
+      final List<DiagnosisLog> parsedDiagnoses = diagnosesJson.map((d) {
+        return DiagnosisLog(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (d['diseaseName'] ?? 'diag'),
+          diseaseName: d['diseaseName'] ?? '알 수 없는 진단',
+          diseaseCode: d['diseaseCode'] ?? 'UNKNOWN',
+          diagnosisDate: d['diagnosisDate'] ?? result['prescriptionDate'] ?? DateTime.now().toIso8601String().split('T')[0],
+          hospitalName: d['hospitalName'] ?? '미지정 병원',
+          doctorOpinion: d['doctorOpinion'] ?? '',
+          inputMethod: 'GEMINI_AI_OCR',
+          isActive: true,
+        );
+      }).toList();
+
+      if (parsedLogs.isEmpty && parsedDiagnoses.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('인식된 약물이 없습니다. 직접 입력해서 추가해 주세요.')),
+            const SnackBar(content: Text('인식된 복약 기록 또는 진단 정보가 없습니다. 직접 입력해서 추가해 주세요.')),
           );
         }
         return;
       }
 
-      // 5. Route to Batch AI Review Screen
+      // 5. Route to appropriate screen based on OCR findings
       if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => AiReviewScreen(
-            initialLogs: parsedLogs,
-            onSave: (newLogs) async {
-              for (var log in newLogs) {
-                await localStorage.saveMedication(log);
-              }
-              _loadLocalData(); // Refresh local list
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
-              );
-            },
+      if (parsedDiagnoses.isNotEmpty && (parsedLogs.isEmpty || documentType == 'MEDICAL_CERTIFICATE')) {
+        // Route to Diagnosis Review Screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => DiagnosisReviewScreen(
+              initialLogs: parsedDiagnoses,
+              onSave: (newDiags) async {
+                for (var diag in newDiags) {
+                  await localStorage.saveDiagnosis(diag);
+                }
+                _loadLocalData(); // Refresh UI
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('새로운 진단 정보가 추가되었습니다!')),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        // Route to Medications Review Screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiReviewScreen(
+              initialLogs: parsedLogs,
+              onSave: (newLogs) async {
+                for (var log in newLogs) {
+                  await localStorage.saveMedication(log);
+                }
+                _loadLocalData(); // Refresh UI
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
+                );
+              },
+            ),
+          ),
+        );
+      }
 
     } catch (e) {
       if (mounted) {
@@ -534,6 +660,57 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
+  // Opens a blank DiagnosisLog form for manual entry
+  void _addDiagnosisManually() {
+    final blankLog = DiagnosisLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      diseaseName: '',
+      diseaseCode: '',
+      diagnosisDate: DateTime.now().toIso8601String().split('T')[0],
+      hospitalName: '',
+      doctorOpinion: '',
+      inputMethod: 'MANUAL',
+      isActive: true,
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DiagnosisReviewScreen(
+          initialLogs: [blankLog],
+          onSave: (newDiags) async {
+            for (var diag in newDiags) {
+              await localStorage.saveDiagnosis(diag);
+            }
+            _loadLocalData(); // Refresh UI state
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('새로운 진단 정보가 추가되었습니다!')),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Opens DiagnosisReviewScreen for editing a saved diagnosis log
+  void _editDiagnosis(DiagnosisLog log) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => DiagnosisReviewScreen(
+          initialLogs: [log],
+          onSave: (updatedLogs) async {
+            if (updatedLogs.isNotEmpty) {
+              await localStorage.saveDiagnosis(updatedLogs.first);
+              _loadLocalData(); // Refresh UI State
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('진단 정보가 성공적으로 수정되었습니다.')),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   // Opens the QR Generator Screen with custom sharing expiration & content selection
   void _showQrGenerator() {
     int selectedSeconds = 180; // default 3 minutes
@@ -541,6 +718,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     bool shareMedicalInfo = true;
     // Set containing selected medication IDs (initially all medications are selected)
     Set<String> selectedMedicationIds = _medications.map((m) => m.id).toSet();
+    // Set containing selected diagnosis IDs (initially all diagnoses are selected)
+    Set<String> selectedDiagnosisIds = _diagnoses.map((d) => d.id).toSet();
 
     showModalBottomSheet(
       context: context,
@@ -694,11 +873,44 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         );
                       }).toList(),
                     ],
+
+                    if (_diagnoses.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        '확진/진단서 기록 개별 선택',
+                        style: TextStyle(
+                          color: onSurfaceColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ..._diagnoses.map((diag) {
+                        final isChecked = selectedDiagnosisIds.contains(diag.id);
+                        return CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: primaryColor,
+                          title: Text(diag.diseaseName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: onSurfaceColor)),
+                          subtitle: Text('${diag.diseaseCode} • ${diag.hospitalName}', style: const TextStyle(fontSize: 12, color: onSurfaceVariant)),
+                          value: isChecked,
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                selectedDiagnosisIds.add(diag.id);
+                              } else {
+                                selectedDiagnosisIds.remove(diag.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ],
                     
                     const SizedBox(height: 24),
                     
                     ElevatedButton(
-                      onPressed: (shareProfile || shareMedicalInfo || selectedMedicationIds.isNotEmpty)
+                      onPressed: (shareProfile || shareMedicalInfo || selectedMedicationIds.isNotEmpty || selectedDiagnosisIds.isNotEmpty)
                           ? () async {
                               Navigator.of(context).pop(); // Close BottomSheet
                               await _generateAndShowQr(
@@ -706,6 +918,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                 shareProfile: shareProfile,
                                 shareMedicalInfo: shareMedicalInfo,
                                 selectedMedicationIds: selectedMedicationIds,
+                                selectedDiagnosisIds: selectedDiagnosisIds,
                               );
                             }
                           : null, // Disable button if nothing is checked
@@ -783,6 +996,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     required bool shareProfile,
     required bool shareMedicalInfo,
     required Set<String> selectedMedicationIds,
+    required Set<String> selectedDiagnosisIds,
   }) async {
     // Show Loading Dialog
     showDialog(
@@ -816,9 +1030,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           .map((m) => m.toMap())
           .toList();
 
+      final filteredDiagnoses = _diagnoses
+          .where((d) => selectedDiagnosisIds.contains(d.id))
+          .map((d) => d.toMap())
+          .toList();
+
       final data = {
         'profile': filteredProfile,
         'medications': filteredMedications,
+        'diagnoses': filteredDiagnoses,
       };
       
       final plaintext = json.encode(data);
@@ -1001,7 +1221,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               onPressed: _showAddMedicationOptions,
               icon: const Icon(Icons.add_circle_outline, size: 24, color: Colors.white),
               label: const Text(
-                '새 복약 기록 추가',
+                '새 건강 기록 추가',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1084,7 +1304,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            '처방 및 복약 기록 전체',
+            '건강 및 의료 기록 전체',
             style: TextStyle(
               color: onSurfaceColor,
               fontSize: 22,
@@ -1094,27 +1314,218 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            '클릭하여 처방 로그 세부사항을 확인하고 직접 수정할 수 있습니다.',
+            '스캔하거나 직접 기입한 약물 정보 및 진단 내역을 관리합니다.',
             style: TextStyle(color: onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 16),
-          Expanded(
-            child: _medications.isEmpty
-                ? const Center(
-                    child: Text('저장된 복약 기록이 없습니다.'),
-                  )
-                : ListView.separated(
-                    itemCount: _medications.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final log = _medications[index];
-                      return GestureDetector(
-                        onTap: () => _editMedication(log),
-                        child: _buildRecordCard(log),
-                      );
+
+          // Custom Segmented Switcher Control
+          Container(
+            padding: const EdgeInsets.all(4.0),
+            decoration: BoxDecoration(
+              color: outlineVariant.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _recordsSubTabIndex = 0;
+                      });
                     },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      decoration: BoxDecoration(
+                        color: _recordsSubTabIndex == 0 ? surfaceColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8.0),
+                        boxShadow: _recordsSubTabIndex == 0
+                            ? const [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '💊 복약 기록 (${_medications.length})',
+                          style: TextStyle(
+                            color: _recordsSubTabIndex == 0 ? primaryColor : onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _recordsSubTabIndex = 1;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      decoration: BoxDecoration(
+                        color: _recordsSubTabIndex == 1 ? surfaceColor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8.0),
+                        boxShadow: _recordsSubTabIndex == 1
+                            ? const [BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2))]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '🩺 확진/진단서 (${_diagnoses.length})',
+                          style: TextStyle(
+                            color: _recordsSubTabIndex == 1 ? primaryColor : onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 16),
+
+          // Lists display
+          Expanded(
+            child: _recordsSubTabIndex == 0
+                ? (_medications.isEmpty
+                    ? const Center(
+                        child: Text('저장된 복약 기록이 없습니다.', style: TextStyle(color: onSurfaceVariant)),
+                      )
+                    : ListView.separated(
+                        itemCount: _medications.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final log = _medications[index];
+                          return GestureDetector(
+                            onTap: () => _editMedication(log),
+                            child: _buildRecordCard(log),
+                          );
+                        },
+                      ))
+                : (_diagnoses.isEmpty
+                    ? const Center(
+                        child: Text('저장된 진단 내역이 없습니다.', style: TextStyle(color: onSurfaceVariant)),
+                      )
+                    : ListView.separated(
+                        itemCount: _diagnoses.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final log = _diagnoses[index];
+                          return GestureDetector(
+                            onTap: () => _editDiagnosis(log),
+                            child: _buildDiagnosisCard(log),
+                          );
+                        },
+                      )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Renders a high-contrast elegant diagnosis certificate item card
+  Widget _buildDiagnosisCard(DiagnosisLog log) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: log.isActive ? outlineVariant : outlineVariant.withOpacity(0.5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x03000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  log.diseaseName,
+                  style: const TextStyle(
+                    color: onSurfaceColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  color: primaryContainer.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(6.0),
+                ),
+                child: Text(
+                  log.diseaseCode,
+                  style: const TextStyle(
+                    color: primaryColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1, color: outlineVariant),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, color: outlineColor, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                '진단일: ${log.diagnosisDate}',
+                style: const TextStyle(color: onSurfaceVariant, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.local_hospital, color: outlineColor, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                '기관: ${log.hospitalName}',
+                style: const TextStyle(color: onSurfaceVariant, fontSize: 13),
+              ),
+            ],
+          ),
+          if (log.doctorOpinion.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Text(
+                log.doctorOpinion,
+                style: const TextStyle(
+                  color: onSurfaceVariant,
+                  fontSize: 12.5,
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

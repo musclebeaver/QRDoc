@@ -287,6 +287,33 @@
                 </div>
             </div>
 
+            <!-- Diagnosis History Card -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-medical-card overflow-hidden">
+                <div class="p-lg border-b border-surface-variant flex justify-between items-center bg-surface-container-low">
+                    <h3 class="font-headline-md text-headline-md text-on-surface m-0 flex items-center gap-sm">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 0;">description</span>
+                        확진 및 진단 이력
+                    </h3>
+                    <span class="bg-primary-container text-on-primary-container font-label-md text-label-md px-3 py-1 rounded-full border border-primary/10">진단서/소견서 연동</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-surface border-b border-outline-variant">
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">확진 병명</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">질병 코드</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">진단 일자</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">의료기관</th>
+                                <th class="p-md font-label-lg text-label-lg text-on-surface-variant font-semibold">의사 소견 및 조치</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diagnosis-list" class="font-body-md text-body-md text-on-surface divide-y divide-surface-variant">
+                            <!-- Loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Termination Section -->
             <div class="flex justify-end pt-md">
                 <button id="btn-terminate" class="bg-error text-on-error h-[48px] px-xl rounded-full font-label-lg text-label-lg flex items-center gap-2 hover:bg-on-error-container transition-colors shadow-md active:scale-95">

@@ -10,7 +10,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const MAX_PAYLOAD_SIZE = 50 * 1024;
 const uploadShareData = async (req, res) => {
     try {
-        const { ciphertext, iv, tag } = req.body;
+        const { ciphertext, iv, tag, expireSeconds } = req.body;
         if (!ciphertext || !iv || !tag) {
             res.status(400).json({ error: 'Missing required parameters: ciphertext, iv, and tag are required.' });
             return;
@@ -21,16 +21,24 @@ const uploadShareData = async (req, res) => {
             res.status(413).json({ error: 'Payload size exceeds the 50KB limit.' });
             return;
         }
+        // Determine custom expiration time (clamped between 60s and 1800s, default 180s)
+        let expireSecondsInt = 180;
+        if (expireSeconds !== undefined) {
+            const parsed = parseInt(expireSeconds, 10);
+            if (!isNaN(parsed)) {
+                expireSecondsInt = Math.max(60, Math.min(parsed, 1800));
+            }
+        }
         // Generate unique short ID or UUID
         const dataId = crypto_1.default.randomUUID();
-        // Store in Redis with 180 seconds (3 minutes) TTL
+        // Store in Redis with custom TTL
         const redisKey = `share:${dataId}`;
         await redis_1.redisClient.set(redisKey, payloadString, {
-            EX: 180, // Expire in 180 seconds
+            EX: expireSecondsInt,
         });
         res.status(201).json({
             dataId,
-            expiresIn: 180,
+            expiresIn: expireSecondsInt,
         });
     }
     catch (error) {
@@ -47,6 +55,8 @@ const getShareData = async (req, res) => {
             return;
         }
         const redisKey = `share:${dataId}`;
+        // Fetch remaining TTL before deletion
+        const ttl = await redis_1.redisClient.ttl(redisKey);
         const rawData = await redis_1.redisClient.get(redisKey);
         if (!rawData) {
             res.status(404).json({ error: '데이터가 만료되었거나 존재하지 않습니다.' });
@@ -54,9 +64,12 @@ const getShareData = async (req, res) => {
         }
         // [보안 핵심] Burn-After-Reading: 최초 조회 시 Redis에서 데이터를 즉시 삭제
         await redis_1.redisClient.del(redisKey);
-        // Parse and return the payload
+        // Parse and return the payload with remaining TTL
         const parsedData = JSON.parse(rawData);
-        res.status(200).json(parsedData);
+        res.status(200).json({
+            ...parsedData,
+            expiresIn: Math.max(0, ttl),
+        });
     }
     catch (error) {
         console.error('Error fetching share data:', error);

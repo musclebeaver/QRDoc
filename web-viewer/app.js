@@ -190,6 +190,37 @@ function renderDashboard(data) {
     } else {
         medListContainer.innerHTML = '<tr><td colspan="4" class="p-md text-center text-on-surface-variant opacity-60">복용 중인 약물이 없습니다.</td></tr>';
     }
+
+    // Diagnosis logs table
+    const diagListContainer = document.getElementById('diagnosis-list');
+    diagListContainer.innerHTML = '';
+    const diagnoses = data.diagnoses || [];
+
+    if (diagnoses.length > 0) {
+        diagnoses.forEach(diag => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-surface-container-low transition-colors group';
+            tr.innerHTML = `
+                <td class="p-md flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">description</span>
+                    </div>
+                    <span class="font-semibold text-primary">${escapeHtml(diag.diseaseName)}</span>
+                </td>
+                <td class="p-md text-on-surface-variant font-medium">
+                    <span class="bg-surface-container-high px-2 py-0.5 rounded text-sm border border-outline-variant font-mono font-semibold">${escapeHtml(diag.diseaseCode)}</span>
+                </td>
+                <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.diagnosisDate)}</td>
+                <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.hospitalName)}</td>
+                <td class="p-md text-on-surface-variant font-medium text-sm italic opacity-90 max-w-[300px] truncate" title="${escapeHtml(diag.doctorOpinion)}">
+                    ${escapeHtml(diag.doctorOpinion || '-')}
+                </td>
+            `;
+            diagListContainer.appendChild(tr);
+        });
+    } else {
+        diagListContainer.innerHTML = '<tr><td colspan="5" class="p-md text-center text-on-surface-variant opacity-60">등록된 진단 내역이 없습니다.</td></tr>';
+    }
 }
 
 // Timer Countdown Loop
@@ -247,6 +278,7 @@ function triggerExpiration() {
     });
 
     document.getElementById('medication-list').innerHTML = '';
+    document.getElementById('diagnosis-list').innerHTML = '';
     document.getElementById('chronic-diseases-container').innerHTML = '';
     document.getElementById('allergies-container').innerHTML = '';
 
