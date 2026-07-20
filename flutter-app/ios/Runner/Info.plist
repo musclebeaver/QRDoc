@@ -70,5 +70,7 @@
 	<string>처방전을 스캔하여 약물 복용 기록을 저장하기 위해 카메라 접근 권한이 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>처방전 사진을 불러와 약물 복용 기록을 저장하기 위해 사진 라이브러리 접근 권한이 필요합니다.</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 </dict>
 </plist>

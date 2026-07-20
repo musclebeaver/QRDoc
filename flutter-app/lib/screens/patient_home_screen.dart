@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../main.dart'; // To access the global localStorage singleton
 import 'edit_profile_screen.dart';
 import '../models/patient_profile.dart';
@@ -91,15 +92,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         return;
       }
 
-      // 2. Show loading dialog
+      // 2. Show loading dialog with AdMob Test Banner
       if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(color: primaryColor),
-          );
+          return const AdmobLoadingDialog();
         },
       );
 
@@ -526,15 +525,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         return;
       }
 
-      // 2. Show loading dialog
+      // 2. Show loading dialog with AdMob Test Banner
       if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return const Center(
-            child: CircularProgressIndicator(color: primaryColor),
-          );
+          return const AdmobLoadingDialog();
         },
       );
 
@@ -1971,6 +1968,125 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// Custom AdMob loading dialog shown during Gemini OCR processing
+class AdmobLoadingDialog extends StatefulWidget {
+  const AdmobLoadingDialog({Key? key}) : super(key: key);
+
+  @override
+  State<AdmobLoadingDialog> createState() => _AdmobLoadingDialogState();
+}
+
+class _AdmobLoadingDialogState extends State<AdmobLoadingDialog> {
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      // Official Google AdMob Test Banner Ad Unit ID
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      size: AdSize.mediumRectangle, // Premium 300x250 medium rectangle banner
+      request: const AdRequest(
+        nonPersonalizedAds: true, // STRICT PRIVACY: Serve Non-Personalized Ads only
+      ),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isAdLoaded = true;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          // Fail gracefully without crashing the user flow
+          debugPrint('AdMob failed to load: $error');
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            const SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(color: Color(0xFF003FB1), strokeWidth: 3.5),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Gemini AI 문서 분석 중...',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF191B23),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '약물 성분 및 소견 내용을 추출하고 있습니다. 잠시만 대기해 주세요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF434654),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // AdMob Banner Container (300x250 Medium Rectangle)
+            Container(
+              height: 250,
+              width: 300,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF8FF),
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(color: const Color(0xFFC3C5D7)),
+              ),
+              alignment: Alignment.center,
+              child: _isAdLoaded && _bannerAd != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(11.0),
+                      child: AdWidget(ad: _bannerAd!),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.ads_click, color: Color(0xFFC3C5D7), size: 40),
+                        SizedBox(height: 8),
+                        Text(
+                          'Sponsor Ad',
+                          style: TextStyle(fontSize: 12, color: Color(0xFFC3C5D7), fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'screens/patient_home_screen.dart';
 import 'services/local_storage_service.dart';
 import 'services/api_service.dart';
@@ -15,6 +16,9 @@ final ApiService apiService = ApiService(
 void main() async {
   // Ensure Flutter engine bindings are initialized for native channels
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Google Mobile Ads SDK
+  await MobileAds.instance.initialize();
   
   // Initialize Hive encrypted database using secure OS credentials
   await localStorage.initDatabase();
