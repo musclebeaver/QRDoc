@@ -40,6 +40,13 @@
 * **비상 의료 패스 활성화**: `PatientProfile` 탭에 잠금화면용 비상 패스 위젯 활성화 스위치 및 미리보기 기능을 추가하여 앱 잠금 상태에서도 혈액형, 알레르기 등 중요 요소를 구조대원이 볼 수 있게 연동했습니다.
 
 ### 7. 추가 고도화 및 정식 마켓 제출 요건 보완 (2026-07-20)
+* **내 프로필 수정 기능 탑재 ([edit_profile_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/edit_profile_screen.dart))**:
+  * 성명, 생년월일(달력 선택 연동), 혈액형(드롭다운), 만성 지병 태그 관리, 알레르기 태그 관리, 비상 연락처 등을 자유롭게 입력/수정하고 로컬 Hive DB에 암호화하여 즉시 저장할 수 있는 프로필 편집 폼을 전면 개발했습니다.
+* **실제 모바일 카메라 처방전 스캔 연동**:
+  * `image_picker` 패키지를 연동하여 환자가 `새 처방전 스캔하기` 버튼을 터치할 시 기기의 **실제 네이티브 카메라가 구동**되도록 구성했습니다.
+  * 촬영물은 백엔드에 안전하게 전송(HTTPS)되어 Gemini OCR을 거치며, 기기 결함 또는 에뮬레이터 환경 등으로 카메라 작동 실패 시 **테스트용 샘플 데이터 자동 주입 플로우(Fallback)**로 연동되는 인텔리전트 구조를 도입했습니다.
+* **OS 내비게이션 바 중첩 개선 (SafeArea)**:
+  * 바텀시트 모달 창을 `SafeArea`로 래핑하고, 하단 패딩에 `MediaQuery.of(context).padding.bottom`을 추가하여 안드로이드 네비게이션 소프트 바 및 홈 버튼과의 겹침/중첩 오류를 영구 수정했습니다.
 * **다중 약물 일괄 검토 UI ([ai_review_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/ai_review_screen.dart))**:
   * 단일 편집 폼에서 다중 약물 일괄 편집 카드로 대폭 업그레이드하여 한 화면에서 스캔된 여러 약품들의 이름, 용량, 횟수, 기간을 일괄 수정/추가/삭제할 수 있는 벌크 편집 기능을 추가했습니다.
 * **비상 상황 응급 카드 위젯 ([emergency_pass_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/emergency_pass_screen.dart))**:
@@ -60,7 +67,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=4](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=4)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=4` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=5](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=5)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=5` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
