@@ -243,6 +243,162 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
+  // Shows a bottom sheet option to scan via camera or input manually
+  void _showAddMedicationOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  '복약 기록 추가 방식 선택',
+                  style: TextStyle(
+                    color: onSurfaceColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Option 1: Camera Scan
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _scanNewPrescription();
+                  },
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: outlineVariant),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.photo_camera, color: primaryColor, size: 28),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                '📷 카메라로 처방전 스캔',
+                                style: TextStyle(
+                                  color: onSurfaceColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '처방전 사진을 분석해 약물 정보를 자동 추출합니다.',
+                                style: TextStyle(
+                                  color: onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Option 2: Manual Input
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _addMedicationManually();
+                  },
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: outlineVariant),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_note, color: secondaryColor, size: 28),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                '✏️ 직접 입력하여 추가',
+                                style: TextStyle(
+                                  color: onSurfaceColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '약물명과 복용 방법을 수동으로 직접 기입합니다.',
+                                style: TextStyle(
+                                  color: onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Opens a blank MedicationLog form for manual entry
+  void _addMedicationManually() {
+    final blankLog = MedicationLog(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      medicineName: '',
+      dosage: '',
+      frequencyPerDay: 1,
+      totalDays: 3,
+      prescriptionDate: DateTime.now().toIso8601String().split('T')[0],
+      inputMethod: 'MANUAL',
+      isActive: true,
+    );
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AiReviewScreen(
+          initialLogs: [blankLog],
+          onSave: (newLogs) async {
+            for (var log in newLogs) {
+              await localStorage.saveMedication(log);
+            }
+            _loadLocalData(); // Refresh UI state
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   // Opens the QR Generator Screen with custom sharing expiration & content selection
   void _showQrGenerator() {
     int selectedSeconds = 180; // default 3 minutes
@@ -705,12 +861,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Main Scan Button
+            // Main Add Record Button (supporting camera ocr & manual entry choice)
             ElevatedButton.icon(
-              onPressed: _scanNewPrescription,
-              icon: const Icon(Icons.photo_camera, size: 24, color: Colors.white),
+              onPressed: _showAddMedicationOptions,
+              icon: const Icon(Icons.add_circle_outline, size: 24, color: Colors.white),
               label: const Text(
-                '새 처방전 스캔하기',
+                '새 복약 기록 추가',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
