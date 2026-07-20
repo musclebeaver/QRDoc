@@ -40,6 +40,9 @@
 * **비상 의료 패스 활성화**: `PatientProfile` 탭에 잠금화면용 비상 패스 위젯 활성화 스위치 및 미리보기 기능을 추가하여 앱 잠금 상태에서도 혈액형, 알레르기 등 중요 요소를 구조대원이 볼 수 있게 연동했습니다.
 
 ### 7. 추가 고도화 및 정식 마켓 제출 요건 보완 (2026-07-20)
+* **복약 기록 추가 방식 선택 모달 및 수동 직접 입력 기능 탑재**:
+  * 메인 추가 버튼을 `새 복약 기록 추가`로 개편하고, 터치 시 **"📷 카메라로 처방전 스캔"**과 **"✏️ 직접 입력하여 추가"** 중 환자가 편리한 수단을 고를 수 있는 옵션 시트를 제공합니다.
+  * 수동 추가 시, 빈 처방 내역 폼을 띄워 약물 이름 및 복약량/횟수/기간을 직접 수동 기재하여 완벽히 로컬 DB에 추가할 수 있도록 보완했습니다.
 * **내 프로필 수정 기능 탑재 ([edit_profile_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/edit_profile_screen.dart))**:
   * 성명, 생년월일(달력 선택 연동), 혈액형(드롭다운), 만성 지병 태그 관리, 알레르기 태그 관리, 비상 연락처 등을 자유롭게 입력/수정하고 로컬 Hive DB에 암호화하여 즉시 저장할 수 있는 프로필 편집 폼을 전면 개발했습니다.
 * **실제 모바일 카메라 처방전 스캔 연동**:
@@ -67,7 +70,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=5](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=5)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=5` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=6](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=6)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=6` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
