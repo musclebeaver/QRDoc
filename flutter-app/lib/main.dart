@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'screens/patient_home_screen.dart';
 import 'services/local_storage_service.dart';
+import 'services/api_service.dart';
+import 'services/encryption_service.dart';
 
-// Singleton instance of the secure storage database service
+// Singletons for database, networking, and cryptography
 final LocalStorageService localStorage = LocalStorageService();
+final EncryptionService encryptionService = EncryptionService();
+final ApiService apiService = ApiService(
+  baseUrl: 'http://qrdoc.devbeaver.cloud/api',
+  webViewerUrl: 'http://qrdoc.devbeaver.cloud/',
+);
 
 void main() async {
   // Ensure Flutter engine bindings are initialized for native channels

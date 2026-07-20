@@ -41,13 +41,18 @@ class ApiService {
 
   /// Sends the encrypted package to the backend and returns the formatted viewer URL
   /// which embeds the Secret Key inside the URL Hash (#) fragment.
-  Future<String> generateShareQrUrl(EncryptionResult encryptionResult) async {
+  Future<String> generateShareQrUrl(EncryptionResult encryptionResult, {int? expireSeconds}) async {
     final uri = Uri.parse('$baseUrl/share');
+    
+    final Map<String, dynamic> payload = encryptionResult.toJsonMap();
+    if (expireSeconds != null) {
+      payload['expireSeconds'] = expireSeconds;
+    }
     
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: json.encode(encryptionResult.toJsonMap()),
+      body: json.encode(payload),
     );
 
     if (response.statusCode == 201) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../main.dart'; // To access the global localStorage singleton
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
@@ -112,15 +113,315 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  // Opens the QR Generator Screen with a mock sharing URL
+  // Opens the QR Generator Screen with custom sharing expiration & content selection
   void _showQrGenerator() {
-    // Zero-Knowledge URL simulation: id is query parameter, secret key is in URL hash fragment
-    const mockShareUrl = 'http://qrdoc.devbeaver.cloud/?id=share-592b1a8f#k9120ba98dce1e289f81';
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const QrGeneratorScreen(qrUrl: mockShareUrl),
+    int selectedSeconds = 180; // default 3 minutes
+    bool shareProfile = true;
+    bool shareMedicalInfo = true;
+    // Set containing selected medication IDs (initially all medications are selected)
+    Set<String> selectedMedicationIds = _medications.map((m) => m.id).toSet();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Allow custom height and scrolling inside bottom sheet
+      backgroundColor: backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      '바이탈패스 QR 생성 설정',
+                      style: TextStyle(
+                        color: onSurfaceColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Expiry selection header
+                    const Text(
+                      '1. QR 코드 유효기간 설정',
+                      style: TextStyle(
+                        color: onSurfaceColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Duration Option List
+                    _buildDurationOption(
+                      title: '1분 (보안 공유 권장)',
+                      seconds: 60,
+                      current: selectedSeconds,
+                      onTap: () => setModalState(() => selectedSeconds = 60),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDurationOption(
+                      title: '3분 (기본값)',
+                      seconds: 180,
+                      current: selectedSeconds,
+                      onTap: () => setModalState(() => selectedSeconds = 180),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDurationOption(
+                      title: '5분 (여유로운 열람)',
+                      seconds: 300,
+                      current: selectedSeconds,
+                      onTap: () => setModalState(() => selectedSeconds = 300),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDurationOption(
+                      title: '10분 (대기 시간이 길 때)',
+                      seconds: 600,
+                      current: selectedSeconds,
+                      onTap: () => setModalState(() => selectedSeconds = 600),
+                    ),
+                    
+                    const Divider(height: 32),
+                    
+                    // Expiry selection header
+                    const Text(
+                      '2. 공유할 건강 정보 선택',
+                      style: TextStyle(
+                        color: onSurfaceColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Profile Checkbox
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      activeColor: primaryColor,
+                      title: const Text('기본 인적 사항 포함', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: onSurfaceColor)),
+                      subtitle: const Text('이름, 생년월일, 혈액형', style: TextStyle(fontSize: 12, color: onSurfaceVariant)),
+                      value: shareProfile,
+                      onChanged: (val) {
+                        setModalState(() {
+                          shareProfile = val ?? true;
+                        });
+                      },
+                    ),
+                    
+                    // Medical Info Checkbox
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      activeColor: primaryColor,
+                      title: const Text('민감 의료 요약 정보 포함', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: onSurfaceColor)),
+                      subtitle: const Text('만성 지병, 알레르기 내역, 비상 연락처', style: TextStyle(fontSize: 12, color: onSurfaceVariant)),
+                      value: shareMedicalInfo,
+                      onChanged: (val) {
+                        setModalState(() {
+                          shareMedicalInfo = val ?? true;
+                        });
+                      },
+                    ),
+                    
+                    if (_medications.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        '복약 기록 개별 선택',
+                        style: TextStyle(
+                          color: onSurfaceColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ..._medications.map((med) {
+                        final isChecked = selectedMedicationIds.contains(med.id);
+                        return CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: primaryColor,
+                          title: Text(med.medicineName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: onSurfaceColor)),
+                          subtitle: Text('${med.dosage} • 하루 ${med.frequencyPerDay}회', style: const TextStyle(fontSize: 12, color: onSurfaceVariant)),
+                          value: isChecked,
+                          onChanged: (val) {
+                            setModalState(() {
+                              if (val == true) {
+                                selectedMedicationIds.add(med.id);
+                              } else {
+                                selectedMedicationIds.remove(med.id);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ],
+                    
+                    const SizedBox(height: 24),
+                    
+                    ElevatedButton(
+                      onPressed: (shareProfile || shareMedicalInfo || selectedMedicationIds.isNotEmpty)
+                          ? () async {
+                              Navigator.of(context).pop(); // Close BottomSheet
+                              await _generateAndShowQr(
+                                expireSeconds: selectedSeconds,
+                                shareProfile: shareProfile,
+                                shareMedicalInfo: shareMedicalInfo,
+                                selectedMedicationIds: selectedMedicationIds,
+                              );
+                            }
+                          : null, // Disable button if nothing is checked
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        disabledBackgroundColor: outlineVariant,
+                      ),
+                      child: const Text(
+                        'QR 코드 생성하기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDurationOption({
+    required String title,
+    required int seconds,
+    required int current,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = seconds == current;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor.withOpacity(0.05) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(
+            color: isSelected ? primaryColor : outlineVariant,
+            width: isSelected ? 2.0 : 1.0,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? primaryColor : onSurfaceColor,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 15,
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: primaryColor)
+            else
+              const Icon(Icons.radio_button_off, color: outlineColor),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _generateAndShowQr({
+    required int expireSeconds,
+    required bool shareProfile,
+    required bool shareMedicalInfo,
+    required Set<String> selectedMedicationIds,
+  }) async {
+    // Show Loading Dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(color: primaryColor),
+        );
+      },
+    );
+
+    try {
+      // 1. Package actual local data with user's custom filtering selections
+      final Map<String, dynamic> filteredProfile = {};
+      if (shareProfile) {
+        filteredProfile['uuid'] = _profile.uuid;
+        filteredProfile['name'] = _profile.name;
+        filteredProfile['birthDate'] = _profile.birthDate;
+        filteredProfile['bloodType'] = _profile.bloodType;
+        filteredProfile['updatedAt'] = _profile.updatedAt;
+      }
+      if (shareMedicalInfo) {
+        filteredProfile['chronicDiseases'] = _profile.chronicDiseases;
+        filteredProfile['allergies'] = _profile.allergies;
+        filteredProfile['emergencyContact'] = _profile.emergencyContact;
+      }
+
+      final filteredMedications = _medications
+          .where((m) => selectedMedicationIds.contains(m.id))
+          .map((m) => m.toMap())
+          .toList();
+
+      final data = {
+        'profile': filteredProfile,
+        'medications': filteredMedications,
+      };
+      
+      final plaintext = json.encode(data);
+
+      // 2. Encrypt using client-side service
+      final encryptionResult = await encryptionService.encryptData(plaintext);
+
+      // 3. Upload to backend server
+      final qrUrl = await apiService.generateShareQrUrl(
+        encryptionResult,
+        expireSeconds: expireSeconds,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss Loading Dialog
+
+        // 4. Push QrGeneratorScreen with real generated url
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => QrGeneratorScreen(qrUrl: qrUrl),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss Loading Dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('QR 생성 실패: $e')),
+        );
+      }
+    }
   }
 
   @override

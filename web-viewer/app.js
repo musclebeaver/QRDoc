@@ -104,7 +104,7 @@ async function init() {
             return;
         }
 
-        const data = await response.json(); // { ciphertext, iv, tag }
+        const data = await response.json(); // { ciphertext, iv, tag, expiresIn }
 
         // 3. Client-side decryption (Zero-Knowledge)
         const decryptedText = await decryptPayload(data.ciphertext, data.iv, data.tag, decryptionKey);
@@ -114,7 +114,7 @@ async function init() {
         renderDashboard(patientData);
 
         // 5. Start Countdown
-        startCountdown();
+        startCountdown(data.expiresIn || 180);
 
     } catch (err) {
         showError('오류 발생', err.message || '데이터 처리에 실패했습니다.');
@@ -193,8 +193,8 @@ function renderDashboard(data) {
 }
 
 // Timer Countdown Loop
-function startCountdown() {
-    timeLeft = TOTAL_TIME;
+function startCountdown(initialTime) {
+    timeLeft = initialTime;
     updateTimerUI();
 
     countdownInterval = setInterval(() => {

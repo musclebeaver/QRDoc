@@ -33,6 +33,9 @@ cd "$APP_DIR"
 echo "Running pub get..."
 "$FLUTTER" pub get
 
+echo "Generating Launcher Icons..."
+"$FLUTTER" pub run flutter_launcher_icons
+
 echo "Building release APK..."
 "$FLUTTER" build apk \
   --release \
