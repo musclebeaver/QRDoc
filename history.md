@@ -63,6 +63,20 @@
 * **앱 아이콘 빌드 파이프라인 탑재**:
   * 제공해주신 `qrdocIcon.png` 리소스를 기준으로 모바일 빌드 컴파일 단계에서 OS별(Android/iOS) 네이티브 밀도 아이콘을 자동으로 리사이징하고 덮어씌워 적용하도록 빌드 자동화 스크립트를 고도화했습니다.
 
+### 8. 진단서 연동 기능 탑재 및 타입 캐스팅 버그 수정 (2026-07-20)
+* **🩺 진단서(확진 내역) 데이터 구조 및 Hive 암호화 DB 구축**:
+  * 질병명, KCD 분류 코드, 진단 일자, 발급 기관, 의사 소견을 포함한 `DiagnosisLog` 모델을 구축하고 로컬 암호화 저장소에 연계했습니다.
+* **🧠 Gemini OCR 문서 타입 판독 고도화 및 백엔드 배포**:
+  * 문서 이미지를 스캔 시 처방전(PRESCRIPTION)과 진단서(MEDICAL_CERTIFICATE)를 분류하고 관련 데이터를 파싱하는 구조를 프롬프트에 연계하고 백엔드 서버를 무중단 빌드했습니다.
+* **📱 환자 앱 건강 기록 전체 탭 개편 (Segmented Control)**:
+  * 모바일 홈 화면에 복약 기록 및 확진/진단서 탭 스위처를 장착하고, 각 항목의 상세 조회/수정 및 수동 진단서 입력을 지원합니다.
+* **🩺 의료진용 웹 뷰어 진단서 테이블 연동**:
+  * QR 코드 해독 후, 인적 사항 및 복약 정보 외에 '확진 및 진단 이력' 표가 유려한 마테리얼 디자인으로 노출되도록 구성했습니다.
+* **🐛 QR 생성 "String of value" 타입 캐스팅 런타임 오류 수정**:
+  * Dart에서 `Map<String, String>`에 `int` 타입의 `expireSeconds`를 주입하려 할 때 발생하던 런타임 캐스팅 오류(`type 'int' is not a subtype of type 'String' of 'value'`)를 해결하고자, API 전송 직전 `Map<String, dynamic>.from(...)` 복사 처리를 도입하여 완벽히 해결했습니다.
+* **🗑️ 복약 및 진단 기록 개별 삭제 기능 탑재**:
+  * 복약 기록 및 진단서 카드 상세 에디터에서 개별 항목을 삭제하고 저장할 수 있도록 local storage의 Delete Flow를 연계했습니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -72,7 +86,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=7](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=7)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=7` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=8](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=8)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=8` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
