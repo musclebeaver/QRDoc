@@ -5,6 +5,7 @@ import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
 import 'qr_generator_screen.dart';
 import 'ai_review_screen.dart';
+import 'emergency_pass_screen.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({Key? key}) : super(key: key);
@@ -44,6 +45,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   // Dynamic Medication Logs list in State
   List<MedicationLog> _medications = [];
   int _currentIndex = 0;
+  bool _isEmergencyPassEnabled = false;
 
   @override
   void initState() {
@@ -65,25 +67,39 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
 
   // Navigates to AI Review Screen to add a new prescription (simulating OCR scan)
   void _scanNewPrescription() {
-    // Generate a mock log matching Gemini OCR output format
-    final mockOcrLog = MedicationLog(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      medicineName: 'Metformin',
-      dosage: '500mg',
-      frequencyPerDay: 2,
-      totalDays: 14,
-      prescriptionDate: '2026-07-18',
-      inputMethod: 'GEMINI_AI_OCR',
-      isActive: true,
-    );
+    // Generate mock multi-item logs to simulate a real prescription scan
+    final mockOcrLogs = [
+      MedicationLog(
+        id: DateTime.now().millisecondsSinceEpoch.toString() + '_1',
+        medicineName: 'Metformin',
+        dosage: '500mg',
+        frequencyPerDay: 2,
+        totalDays: 14,
+        prescriptionDate: '2026-07-20',
+        inputMethod: 'GEMINI_AI_OCR',
+        isActive: true,
+      ),
+      MedicationLog(
+        id: DateTime.now().millisecondsSinceEpoch.toString() + '_2',
+        medicineName: 'Glimepiride',
+        dosage: '2mg',
+        frequencyPerDay: 1,
+        totalDays: 14,
+        prescriptionDate: '2026-07-20',
+        inputMethod: 'GEMINI_AI_OCR',
+        isActive: true,
+      ),
+    ];
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AiReviewScreen(
-          initialLog: mockOcrLog,
-          onSave: (newLog) async {
-            // Write payload to secure local database
-            await localStorage.saveMedication(newLog);
+          initialLogs: mockOcrLogs,
+          onSave: (newLogs) async {
+            // Write multiple payloads to secure local database
+            for (var log in newLogs) {
+              await localStorage.saveMedication(log);
+            }
             _loadLocalData(); // Refresh UI State
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
@@ -99,14 +115,16 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AiReviewScreen(
-          initialLog: log,
-          onSave: (updatedLog) async {
+          initialLogs: [log],
+          onSave: (updatedLogs) async {
             // Update payload inside secure local database
-            await localStorage.saveMedication(updatedLog);
-            _loadLocalData(); // Refresh UI State
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('복약 정보가 성공적으로 수정되었습니다.')),
-            );
+            if (updatedLogs.isNotEmpty) {
+              await localStorage.saveMedication(updatedLogs.first);
+              _loadLocalData(); // Refresh UI State
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('복약 정보가 성공적으로 수정되었습니다.')),
+              );
+            }
           },
         ),
       ),
@@ -819,6 +837,95 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       ],
                     ),
                   )
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Emergency Lockscreen Widget Card
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: _isEmergencyPassEnabled ? errorColor : outlineVariant,
+                  width: _isEmergencyPassEnabled ? 2.0 : 1.0,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x05BA1A1A),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.emergency_share, color: errorColor),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          '비상 의료 패스 (잠금화면 위젯)',
+                          style: TextStyle(
+                            color: onSurfaceColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        activeColor: errorColor,
+                        value: _isEmergencyPassEnabled,
+                        onChanged: (value) {
+                          setState(() {
+                            _isEmergencyPassEnabled = value;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value 
+                                  ? '비상 의료 패스 알림창 위젯이 활성화되었습니다. 잠금화면에서 비상 정보가 표시됩니다.' 
+                                  : '비상 의료 패스 알림창 위젯이 비활성화되었습니다.'
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '사고 등 응급 상황 시, 구조대원이 기기를 잠금 해제하지 않고 알림바나 잠금화면에서 즉시 비상 의료 카드를 조회할 수 있게 상시 연동합니다.',
+                    style: TextStyle(
+                      color: onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (_isEmergencyPassEnabled) ...[
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => EmergencyPassScreen(profile: _profile),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.preview, color: Colors.white, size: 18),
+                      label: const Text('비상 의료 패스 미리보기', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: errorColor,
+                        padding: const EdgeInsets.symmetric(vertical: 10.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
