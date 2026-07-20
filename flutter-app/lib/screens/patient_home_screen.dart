@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../main.dart'; // To access the global localStorage singleton
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
@@ -66,9 +68,118 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     });
   }
 
-  // Navigates to AI Review Screen to add a new prescription (simulating OCR scan)
-  void _scanNewPrescription() {
-    // Generate mock multi-item logs to simulate a real prescription scan
+  // Opens the camera to take a prescription photo, uploads it to backend OCR, and opens the review screen
+  Future<void> _scanNewPrescription() async {
+    final ImagePicker picker = ImagePicker();
+    
+    try {
+      // 1. Capture prescription photo from native camera
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85, // Compress image to ~1-2MB to save bandwidth and fit API size constraints
+      );
+
+      if (image == null) {
+        // User cancelled camera capture
+        return;
+      }
+
+      // 2. Show loading dialog
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          );
+        },
+      );
+
+      // 3. Upload photo to backend /api/ocr endpoint
+      final File imageFile = File(image.path);
+      final result = await apiService.processPrescriptionOCR(imageFile);
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss loading dialog
+      }
+
+      // 4. Map OCR JSON result to list of MedicationLogs
+      final List<dynamic> medicationsJson = result['medications'] ?? [];
+      final List<MedicationLog> parsedLogs = medicationsJson.map((m) {
+        return MedicationLog(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (m['medicineName'] ?? 'med'),
+          medicineName: m['medicineName'] ?? '알 수 없는 약물',
+          dosage: m['dosage'] ?? '미지정',
+          frequencyPerDay: m['frequencyPerDay'] ?? 0,
+          totalDays: m['totalDays'] ?? 0,
+          prescriptionDate: result['prescriptionDate'] ?? DateTime.now().toIso8601String().split('T')[0],
+          inputMethod: 'GEMINI_AI_OCR',
+          isActive: true,
+        );
+      }).toList();
+
+      if (parsedLogs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('인식된 약물이 없습니다. 직접 입력해서 추가해 주세요.')),
+          );
+        }
+        return;
+      }
+
+      // 5. Route to Batch AI Review Screen
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AiReviewScreen(
+            initialLogs: parsedLogs,
+            onSave: (newLogs) async {
+              for (var log in newLogs) {
+                await localStorage.saveMedication(log);
+              }
+              _loadLocalData(); // Refresh local list
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
+              );
+            },
+          ),
+        ),
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss loading dialog if open
+        
+        // Show fallback alert for emulator testing
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('카메라 실행 실패'),
+              content: Text('카메라를 열 수 없습니다 ($e). 에뮬레이터 테스트를 위해 샘플 데이터를 사용할까요?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('취소'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _useMockScannerFallback();
+                  },
+                  child: const Text('샘플 데이터 사용'),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    }
+  }
+
+  // Fallback for emulator testing when camera is unavailable
+  void _useMockScannerFallback() {
     final mockOcrLogs = [
       MedicationLog(
         id: DateTime.now().millisecondsSinceEpoch.toString() + '_1',
@@ -97,11 +208,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         builder: (context) => AiReviewScreen(
           initialLogs: mockOcrLogs,
           onSave: (newLogs) async {
-            // Write multiple payloads to secure local database
             for (var log in newLogs) {
               await localStorage.saveMedication(log);
             }
-            _loadLocalData(); // Refresh UI State
+            _loadLocalData();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
             );
@@ -150,12 +260,18 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: SingleChildScrollView(
+            return SafeArea(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                ),
+                padding: EdgeInsets.only(
+                  left: 24.0,
+                  right: 24.0,
+                  top: 20.0,
+                  bottom: 20.0 + MediaQuery.of(context).padding.bottom,
+                ),
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -321,8 +437,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ],
                 ),
               ),
-            );
-          },
+            ),
+          );
+        },
         );
       },
     );
