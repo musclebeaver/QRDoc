@@ -279,6 +279,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('복약 정보가 성공적으로 수정되었습니다.')),
               );
+            } else {
+              // Deleted in the review screen
+              await localStorage.deleteMedication(log.id);
+              _loadLocalData(); // Refresh UI
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('복약 정보가 성공적으로 삭제되었습니다.')),
+              );
             }
           },
         ),
@@ -703,6 +710,13 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               _loadLocalData(); // Refresh UI State
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('진단 정보가 성공적으로 수정되었습니다.')),
+              );
+            } else {
+              // Deleted in the review screen
+              await localStorage.deleteDiagnosis(log.id);
+              _loadLocalData(); // Refresh UI
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('진단 정보가 성공적으로 삭제되었습니다.')),
               );
             }
           },

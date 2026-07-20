@@ -44,7 +44,8 @@ class ApiService {
   Future<String> generateShareQrUrl(EncryptionResult encryptionResult, {int? expireSeconds}) async {
     final uri = Uri.parse('$baseUrl/share');
     
-    final Map<String, dynamic> payload = encryptionResult.toJsonMap();
+    // Use Map.from to create a mutable Map<String, dynamic> that accepts non-string value types
+    final Map<String, dynamic> payload = Map<String, dynamic>.from(encryptionResult.toJsonMap());
     if (expireSeconds != null) {
       payload['expireSeconds'] = expireSeconds;
     }
@@ -63,8 +64,12 @@ class ApiService {
       // dataId is passed to query params, secretKey is kept behind the '#' hash fragment
       return '$webViewerUrl?id=$dataId#${encryptionResult.secretKey}';
     } else {
-      final errorData = json.decode(response.body);
-      throw Exception(errorData['error'] ?? 'Failed to upload share data.');
+      try {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to upload share data.');
+      } catch (_) {
+        throw Exception('Server Error: ${response.statusCode} - ${response.body}');
+      }
     }
   }
 }
