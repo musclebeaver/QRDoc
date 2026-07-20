@@ -29,6 +29,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   static const Color onSurfaceVariant = Color(0xFF434654);
   static const Color errorContainer = Color(0xFFFFDAD6);
   static const Color onErrorContainer = Color(0xFF93000A);
+  static const Color errorColor = Color(0xFFBA1A1A);
 
   // Default patient profile used as initial state before loading from Hive DB
   PatientProfile _profile = PatientProfile(
@@ -865,7 +866,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.emergency_share, color: errorColor),
+                      Icon(Icons.emergency_share, color: errorColor),
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
