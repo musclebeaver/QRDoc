@@ -14,7 +14,7 @@ if [ -f "$ROOT_DIR/.env" ]; then
 fi
 
 # Configuration defaults
-BASE_URL="${BASE_URL:-http://qrdoc.devbeaver.cloud/api}"
+BASE_URL="${BASE_URL:-https://qrdoc.devbeaver.cloud/api}"
 BUILD_NAME="${BUILD_NAME:-1.0.0}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 
@@ -41,7 +41,8 @@ echo "Building release APK..."
   --release \
   --build-name="$BUILD_NAME" \
   --build-number="$BUILD_NUMBER" \
-  --dart-define=BASE_URL="$BASE_URL"
+  --dart-define=BASE_URL="$BASE_URL" \
+  --dart-define=WEB_VIEWER_URL="https://qrdoc.devbeaver.cloud/"
 
 # Automatic deployment to web-viewer folder
 OUTPUT_APK="$APP_DIR/build/app/outputs/flutter-apk/app-release.apk"

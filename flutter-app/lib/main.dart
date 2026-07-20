@@ -8,8 +8,8 @@ import 'services/encryption_service.dart';
 final LocalStorageService localStorage = LocalStorageService();
 final EncryptionService encryptionService = EncryptionService();
 final ApiService apiService = ApiService(
-  baseUrl: 'http://qrdoc.devbeaver.cloud/api',
-  webViewerUrl: 'http://qrdoc.devbeaver.cloud/',
+  baseUrl: const String.fromEnvironment('BASE_URL', defaultValue: 'https://qrdoc.devbeaver.cloud/api'),
+  webViewerUrl: const String.fromEnvironment('WEB_VIEWER_URL', defaultValue: 'https://qrdoc.devbeaver.cloud/'),
 );
 
 void main() async {
