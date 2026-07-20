@@ -243,7 +243,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  // Shows a bottom sheet option to scan via camera or input manually
+  // Shows a bottom sheet option to scan via camera, pick from gallery, or input manually
   void _showAddMedicationOptions() {
     showModalBottomSheet(
       context: context,
@@ -301,7 +301,53 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                               ),
                               SizedBox(height: 4),
                               Text(
-                                '처방전 사진을 분석해 약물 정보를 자동 추출합니다.',
+                                '처방전 사진을 즉석에서 촬영하여 약물을 인식합니다.',
+                                style: TextStyle(
+                                  color: onSurfaceVariant,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Option 2: Gallery Picker
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _scanPrescriptionFromGallery();
+                  },
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: outlineVariant),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.photo_library, color: primaryColor, size: 28),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                '🖼️ 앨범에서 사진 불러오기',
+                                style: TextStyle(
+                                  color: onSurfaceColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                '이미 찍어둔 처방전 앨범 사진에서 정보를 추출합니다.',
                                 style: TextStyle(
                                   color: onSurfaceVariant,
                                   fontSize: 12,
@@ -316,7 +362,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 
-                // Option 2: Manual Input
+                // Option 3: Manual Input
                 InkWell(
                   onTap: () {
                     Navigator.of(context).pop();
@@ -366,6 +412,95 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
         );
       },
     );
+  }
+
+  // Opens the photo library to pick an existing prescription photo, uploads it to backend OCR, and opens the review screen
+  Future<void> _scanPrescriptionFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    
+    try {
+      // 1. Pick prescription photo from device gallery
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85, // Compress to save bandwidth
+      );
+
+      if (image == null) {
+        // User cancelled image selection
+        return;
+      }
+
+      // 2. Show loading dialog
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          );
+        },
+      );
+
+      // 3. Upload photo to backend /api/ocr endpoint
+      final File imageFile = File(image.path);
+      final result = await apiService.processPrescriptionOCR(imageFile);
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss loading dialog
+      }
+
+      // 4. Map OCR JSON result to list of MedicationLogs
+      final List<dynamic> medicationsJson = result['medications'] ?? [];
+      final List<MedicationLog> parsedLogs = medicationsJson.map((m) {
+        return MedicationLog(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + '_' + (m['medicineName'] ?? 'med'),
+          medicineName: m['medicineName'] ?? '알 수 없는 약물',
+          dosage: m['dosage'] ?? '미지정',
+          frequencyPerDay: m['frequencyPerDay'] ?? 0,
+          totalDays: m['totalDays'] ?? 0,
+          prescriptionDate: result['prescriptionDate'] ?? DateTime.now().toIso8601String().split('T')[0],
+          inputMethod: 'GEMINI_AI_OCR',
+          isActive: true,
+        );
+      }).toList();
+
+      if (parsedLogs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('인식된 약물이 없습니다. 직접 입력해서 추가해 주세요.')),
+          );
+        }
+        return;
+      }
+
+      // 5. Route to Batch AI Review Screen
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AiReviewScreen(
+            initialLogs: parsedLogs,
+            onSave: (newLogs) async {
+              for (var log in newLogs) {
+                await localStorage.saveMedication(log);
+              }
+              _loadLocalData(); // Refresh local list
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('새로운 복약 정보가 추가되었습니다!')),
+              );
+            },
+          ),
+        ),
+      );
+
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Dismiss loading dialog if open
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이미지 분석 실패: $e')),
+        );
+      }
+    }
   }
 
   // Opens a blank MedicationLog form for manual entry
