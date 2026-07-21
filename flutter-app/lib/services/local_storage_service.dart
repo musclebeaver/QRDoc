@@ -148,4 +148,15 @@ class LocalStorageService {
   Future<void> deleteDiagnosis(String id) async {
     await _diagnosisBox.delete(id);
   }
+
+  // Font Size Settings (Accessibility)
+  double getFontSizeFactor() {
+    final raw = _profileBox.get('fontSizeFactor');
+    if (raw == null) return 1.0;
+    return double.tryParse(raw) ?? 1.0;
+  }
+
+  Future<void> saveFontSizeFactor(double factor) async {
+    await _profileBox.put('fontSizeFactor', factor.toString());
+  }
 }

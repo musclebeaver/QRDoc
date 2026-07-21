@@ -26,25 +26,54 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  // Global static notifier to rebuild the app when font size is adjusted
+  static final ValueNotifier<double> fontSizeNotifier = ValueNotifier<double>(1.0);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Load initial persisted setting
+    MyApp.fontSizeNotifier.value = localStorage.getFontSizeFactor();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'VitalPass QRDoc',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF003FB1),
-          primary: const Color(0xFF003FB1),
-          surface: const Color(0xFFFAF8FF),
-          background: const Color(0xFFFAF8FF),
-        ),
-        fontFamily: 'Inter',
-      ),
-      home: const PatientHomeScreen(),
+    return ValueListenableBuilder<double>(
+      valueListenable: MyApp.fontSizeNotifier,
+      builder: (context, scaleFactor, child) {
+        return MaterialApp(
+          title: 'VitalPass QRDoc',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF003FB1),
+              primary: const Color(0xFF003FB1),
+              surface: const Color(0xFFFAF8FF),
+              background: const Color(0xFFFAF8FF),
+            ),
+            fontFamily: 'Inter',
+          ),
+          builder: (context, widget) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                // Override textScaleFactor globally to scale all app fonts
+                textScaleFactor: scaleFactor,
+              ),
+              child: widget!,
+            );
+          },
+          home: const PatientHomeScreen(),
+        );
+      },
     );
   }
 }

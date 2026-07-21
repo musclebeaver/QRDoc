@@ -1892,11 +1892,85 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Font Size Settings Card (어르신 배려 글자 크기 조절)
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: outlineVariant),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.text_fields, color: primaryColor),
+                      SizedBox(width: 8),
+                      Text(
+                        '화면 글자 크기 조절 (어르신 배려)',
+                        style: TextStyle(
+                          color: onSurfaceColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Font Size Slider
+                  Row(
+                    children: [
+                      const Text('가장 작게', style: TextStyle(fontSize: 11, color: onSurfaceVariant)),
+                      Expanded(
+                        child: Slider(
+                          value: MyApp.fontSizeNotifier.value,
+                          min: 0.85,
+                          max: 1.45,
+                          divisions: 4, // 0.85, 1.0, 1.15, 1.3, 1.45
+                          activeColor: primaryColor,
+                          inactiveColor: outlineVariant.withOpacity(0.3),
+                          onChanged: (double value) async {
+                            setState(() {
+                              MyApp.fontSizeNotifier.value = value;
+                            });
+                            await localStorage.saveFontSizeFactor(value);
+                          },
+                        ),
+                      ),
+                      const Text('가장 크게', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Current level text indicator
+                  Center(
+                    child: Text(
+                      _getFontSizeLabel(MyApp.fontSizeNotifier.value),
+                      style: const TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 80),
           ],
         ),
       ),
     );
+  }
+
+  String _getFontSizeLabel(double value) {
+    if (value < 0.9) return '작은 글씨 (0.85배)';
+    if (value < 1.1) return '보통 글씨 (1.0배 - 기본값)';
+    if (value < 1.2) return '조금 큰 글씨 (1.15배)';
+    if (value < 1.4) return '큰 글씨 (1.30배 어르신 추천)';
+    return '가장 큰 글씨 (1.45배)';
   }
 
   Widget _buildProfileDetailCard({
