@@ -85,6 +85,13 @@
   * AdMob 라이브러리가 최신 Gradle 9+ 환경의 제거된 configuration block API와 충돌하여 빌드 크래시가 발생하는 것을 진단했습니다.
   * 프로젝트의 Gradle 래퍼 버전을 `8.10.2`로, Android Gradle Plugin(AGP) 버전을 `8.6.0`으로, Kotlin 버전을 `1.9.22`로 안정 격상(Flutter 가이드 준수 마이그레이션)하여 빌드 실패를 원천 복원했습니다.
 
+### 10. 어르신 배려 화면 글자 크기 조절 기능 탑재 (2026-07-21)
+* **🔎 모바일 앱 글로벌 텍스트 스케일 조절 기능 개발**:
+  * 시력이 약한 어르신(노안 사용자)의 가독성을 높이기 위해, 앱 전체 글자 크기를 최소 0.85배에서 최대 1.45배까지 조절할 수 있는 기능을 추가했습니다.
+  * 프로필 탭 하단에 **"화면 글자 크기 조절 (어르신 배려)"** 설정 카드와 슬라이더를 배치했습니다.
+  * **글로벌 ValueNotifier 및 MediaQuery 재정의**: 글자 크기 변경 시 `MaterialApp` 레벨에서 전체 텍스트 렌더러가 즉각 동적 빌드(Rebuild)되도록 설계하여 메인 화면, 다이얼로그, 바텀 시트 및 에디터 화면 전반의 모든 텍스트가 실시간 연동되어 스케일업 되도록 고도화했습니다.
+  * 설정 정보는 로컬 암호화 데이터베이스에 안전하게 영구 저장되어 앱 재기동 시에도 그대로 보존됩니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -94,7 +101,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=9](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=9)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=9` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=10](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=10)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=10` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
