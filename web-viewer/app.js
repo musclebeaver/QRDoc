@@ -191,35 +191,68 @@ function renderDashboard(data) {
         medListContainer.innerHTML = '<tr><td colspan="4" class="p-md text-center text-on-surface-variant opacity-60">복용 중인 약물이 없습니다.</td></tr>';
     }
 
-    // Diagnosis logs table
+    // Diagnosis logs table (Desktop table and Mobile card list)
     const diagListContainer = document.getElementById('diagnosis-list');
-    diagListContainer.innerHTML = '';
+    const diagCardsContainer = document.getElementById('diagnosis-cards');
+    
+    if (diagListContainer) diagListContainer.innerHTML = '';
+    if (diagCardsContainer) diagCardsContainer.innerHTML = '';
+    
     const diagnoses = data.diagnoses || [];
 
     if (diagnoses.length > 0) {
         diagnoses.forEach(diag => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-surface-container-low transition-colors group';
-            tr.innerHTML = `
-                <td class="p-md flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
-                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">description</span>
+            // 1. Populate Desktop Table
+            if (diagListContainer) {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-surface-container-low transition-colors group';
+                tr.innerHTML = `
+                    <td class="p-md flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+                            <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">description</span>
+                        </div>
+                        <span class="font-semibold text-primary">${escapeHtml(diag.diseaseName)}</span>
+                    </td>
+                    <td class="p-md text-on-surface-variant font-medium">
+                        <span class="bg-surface-container-high px-2 py-0.5 rounded text-sm border border-outline-variant font-mono font-semibold">${escapeHtml(diag.diseaseCode)}</span>
+                    </td>
+                    <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.diagnosisDate)}</td>
+                    <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.hospitalName)}</td>
+                    <td class="p-md text-on-surface-variant font-medium text-sm italic opacity-90 max-w-[300px] truncate" title="${escapeHtml(diag.doctorOpinion)}">
+                        ${escapeHtml(diag.doctorOpinion || '-')}
+                    </td>
+                `;
+                diagListContainer.appendChild(tr);
+            }
+
+            // 2. Populate Mobile Cards
+            if (diagCardsContainer) {
+                const card = document.createElement('div');
+                card.className = 'py-4 space-y-2 first:pt-0 last:pb-0';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[20px]">description</span>
+                            <span class="font-bold text-on-background text-base">${escapeHtml(diag.diseaseName)}</span>
+                        </div>
+                        <span class="bg-surface-container-high px-2 py-0.5 rounded text-xs border border-outline-variant font-mono font-semibold text-on-surface">${escapeHtml(diag.diseaseCode)}</span>
                     </div>
-                    <span class="font-semibold text-primary">${escapeHtml(diag.diseaseName)}</span>
-                </td>
-                <td class="p-md text-on-surface-variant font-medium">
-                    <span class="bg-surface-container-high px-2 py-0.5 rounded text-sm border border-outline-variant font-mono font-semibold">${escapeHtml(diag.diseaseCode)}</span>
-                </td>
-                <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.diagnosisDate)}</td>
-                <td class="p-md text-on-surface-variant font-medium">${escapeHtml(diag.hospitalName)}</td>
-                <td class="p-md text-on-surface-variant font-medium text-sm italic opacity-90 max-w-[300px] truncate" title="${escapeHtml(diag.doctorOpinion)}">
-                    ${escapeHtml(diag.doctorOpinion || '-')}
-                </td>
-            `;
-            diagListContainer.appendChild(tr);
+                    <div class="grid grid-cols-2 gap-2 text-sm text-on-surface-variant pt-1">
+                        <div><strong class="text-on-background font-medium">진단일:</strong> ${escapeHtml(diag.diagnosisDate)}</div>
+                        <div><strong class="text-on-background font-medium">의료기관:</strong> ${escapeHtml(diag.hospitalName)}</div>
+                    </div>
+                    ${diag.doctorOpinion ? `
+                        <div class="bg-surface-container-low p-3 rounded text-sm italic text-on-surface-variant mt-2 border-l-2 border-primary">
+                            ${escapeHtml(diag.doctorOpinion)}
+                        </div>
+                    ` : ''}
+                `;
+                diagCardsContainer.appendChild(card);
+            }
         });
     } else {
-        diagListContainer.innerHTML = '<tr><td colspan="5" class="p-md text-center text-on-surface-variant opacity-60">등록된 진단 내역이 없습니다.</td></tr>';
+        if (diagListContainer) diagListContainer.innerHTML = '<tr><td colspan="5" class="p-md text-center text-on-surface-variant opacity-60">등록된 진단 내역이 없습니다.</td></tr>';
+        if (diagCardsContainer) diagCardsContainer.innerHTML = '<div class="py-4 text-center text-on-surface-variant opacity-60 text-sm">등록된 진단 내역이 없습니다.</div>';
     }
 }
 
@@ -279,6 +312,8 @@ function triggerExpiration() {
 
     document.getElementById('medication-list').innerHTML = '';
     document.getElementById('diagnosis-list').innerHTML = '';
+    const diagCards = document.getElementById('diagnosis-cards');
+    if (diagCards) diagCards.innerHTML = '';
     document.getElementById('chronic-diseases-container').innerHTML = '';
     document.getElementById('allergies-container').innerHTML = '';
 

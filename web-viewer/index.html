@@ -296,7 +296,8 @@
                     </h3>
                     <span class="bg-primary-container text-on-primary-container font-label-md text-label-md px-3 py-1 rounded-full border border-primary/10">진단서/소견서 연동</span>
                 </div>
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View (Hidden on mobile) -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-surface border-b border-outline-variant">
@@ -311,6 +312,11 @@
                             <!-- Loaded dynamically -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Card Stack View (Hidden on desktop) -->
+                <div id="diagnosis-cards" class="block md:hidden p-lg divide-y divide-surface-variant space-y-md">
+                    <!-- Loaded dynamically -->
                 </div>
             </div>
 
