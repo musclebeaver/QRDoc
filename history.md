@@ -77,6 +77,14 @@
 * **🗑️ 복약 및 진단 기록 개별 삭제 기능 탑재**:
   * 복약 기록 및 진단서 카드 상세 에디터에서 개별 항목을 삭제하고 저장할 수 있도록 local storage의 Delete Flow를 연계했습니다.
 
+### 9. 기록 길게 누르기(Long Press) 즉시 삭제 기능 및 빌드 호환성 복원 (2026-07-21)
+* **👆 건강 기록 카드 길게 누르기(Long Press)로 간편 삭제 지원**:
+  * 홈 화면의 최근 복약 기록 및 전체 기록 탭(복약 기록 / 확진·진단서)의 모든 개별 카드들에 대해 **길게 누르는 동작(Long Press)**을 감지하여 바로 지울 수 있는 지름길(Shortcut)을 구현했습니다.
+  * 안전사고 방지를 위해 해당 질병/약물명을 함께 띄워주는 **미니멀 경고 컨펌 대화상자(Delete Confirmation Dialog)**를 띄운 뒤, '삭제' 클릭 시 로컬 Hive DB에서 완전 파괴 및 즉시 화면 새로고침되도록 개발했습니다.
+* **⚙️ 최신 Gradle 9.x 빌드 환경 하향 호환성 복원**:
+  * AdMob 라이브러리가 최신 Gradle 9+ 환경의 제거된 configuration block API와 충돌하여 빌드 크래시가 발생하는 것을 진단했습니다.
+  * 프로젝트의 Gradle 래퍼 버전을 `8.10.2`로, Android Gradle Plugin(AGP) 버전을 `8.6.0`으로, Kotlin 버전을 `1.9.22`로 안정 격상(Flutter 가이드 준수 마이그레이션)하여 빌드 실패를 원천 복원했습니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -86,7 +94,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=8](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=8)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=8` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=9](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=9)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=9` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
