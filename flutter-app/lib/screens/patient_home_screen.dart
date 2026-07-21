@@ -1294,6 +1294,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       final log = activeLogs[index];
                       return GestureDetector(
                         onTap: () => _editMedication(log),
+                        onLongPress: () => _showDeleteConfirmDialog(
+                          context: context,
+                          title: '복약 기록 삭제',
+                          content: '\'${log.medicineName}\' 복약 기록을 영구히 삭제하시겠습니까?',
+                          onConfirm: () async {
+                            await localStorage.deleteMedication(log.id);
+                            _loadLocalData();
+                          },
+                        ),
                         child: _buildRecordCard(log),
                       );
                     },
@@ -1325,7 +1334,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            '스캔하거나 직접 기입한 약물 정보 및 진단 내역을 관리합니다.',
+            '스캔하거나 직접 기입한 약물 정보 및 진단 내역을 관리합니다. 길게 눌러 바로 삭제할 수 있습니다.',
             style: TextStyle(color: onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 16),
@@ -1416,6 +1425,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           final log = _medications[index];
                           return GestureDetector(
                             onTap: () => _editMedication(log),
+                            onLongPress: () => _showDeleteConfirmDialog(
+                              context: context,
+                              title: '복약 기록 삭제',
+                              content: '\'${log.medicineName}\' 복약 기록을 영구히 삭제하시겠습니까?',
+                              onConfirm: () async {
+                                await localStorage.deleteMedication(log.id);
+                                _loadLocalData();
+                              },
+                            ),
                             child: _buildRecordCard(log),
                           );
                         },
@@ -1431,6 +1449,15 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           final log = _diagnoses[index];
                           return GestureDetector(
                             onTap: () => _editDiagnosis(log),
+                            onLongPress: () => _showDeleteConfirmDialog(
+                              context: context,
+                              title: '진단 기록 삭제',
+                              content: '\'${log.diseaseName}\' 진단 기록을 영구히 삭제하시겠습니까?',
+                              onConfirm: () async {
+                                await localStorage.deleteDiagnosis(log.id);
+                                _loadLocalData();
+                              },
+                            ),
                             child: _buildDiagnosisCard(log),
                           );
                         },
@@ -1438,6 +1465,78 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Shows a premium alert dialog to confirm item deletion on long press
+  void _showDeleteConfirmDialog({
+    required BuildContext context,
+    required String title,
+    required String content,
+    required Future<void> Function() onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: surfaceColor,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: onSurfaceColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            content,
+            style: const TextStyle(
+              color: onSurfaceVariant,
+              fontSize: 14.5,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                '취소',
+                style: TextStyle(color: onSurfaceVariant, fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                Navigator.of(context).pop();
+                await onConfirm();
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('기록이 성공적으로 삭제되었습니다.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+              ),
+              child: const Text(
+                '삭제',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
