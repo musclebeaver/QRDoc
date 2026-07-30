@@ -296,6 +296,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void _showAddMedicationOptions() {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: backgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
@@ -303,7 +304,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       builder: (BuildContext context) {
         return SafeArea(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

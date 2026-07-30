@@ -93,10 +93,11 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
           )
         ],
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -321,6 +322,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
