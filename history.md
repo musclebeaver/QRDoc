@@ -106,6 +106,15 @@
 * **🚨 비상 의료 패스 위젯 가상 테스트 안내 보강**:
   * 실제 기기 잠금화면 노출 기능은 네이티브 오버레이 서비스 연동이 수반되는 영역으로, 현재 APK 배포본에서는 앱 내 `비상 의료 패스 미리보기` 시뮬레이션 환경을 통해 구조대원 스캔 화면 디자인과 보호자 통화 시나리오 테스트를 제공하고 있습니다.
 
+### 13. iOS 홈화면 위젯 동기화 연동 및 WidgetKit 소스 추가 (2026-07-30)
+* **🍎 iOS AppDelegate Swift MethodChannel 구현**:
+  * [AppDelegate.swift](file:///workspace/QRDoc/flutter-app/ios/Runner/AppDelegate.swift)에 동일한 `com.devbeaver.qrdoc/emergency` 채널 핸들러를 구축했습니다.
+  * Flutter에서 넘어오는 환자 정보를 iOS App Group 저장소(`group.com.devbeaver.qrdoc`의 `UserDefaults`)에 동기화 저장하도록 개발했습니다.
+  * 정보 갱신 즉시 iOS 홈화면 위젯을 업데이트하도록 **`WidgetCenter.shared.reloadAllTimelines()`** API 호출 브릿지를 완성했습니다.
+* **📐 iOS WidgetKit Swift 소스 파일 추가**:
+  * [EmergencyWidget.swift](file:///workspace/QRDoc/flutter-app/ios/EmergencyWidget.swift)를 신규 생성하여 iOS 홈화면 위젯(2x2, .systemSmall)의 SwiftUI 코드를 제공했습니다.
+  * 안드로이드 홈 위젯과 완벽히 짝을 이루는 디자인(Slate Dark 카드 배경 + 레드 터치 버튼)을 구현했으며, 위젯 터치 시 **`qrdoc://emergency`** 스키마 딥링크를 타고 앱 내 비상 의료 패스 오버레이 화면으로 랜딩하도록 설계했습니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -115,7 +124,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=12](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=12)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=12` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=13](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=13)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=13` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
