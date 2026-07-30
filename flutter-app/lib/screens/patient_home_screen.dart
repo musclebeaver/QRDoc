@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -49,6 +50,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     updatedAt: '2026-07-18T10:00:00Z',
   );
 
+  // MethodChannel for communicating with Android native Emergency notification & widget service
+  static const _emergencyChannel = MethodChannel('com.devbeaver.qrdoc/emergency');
+
   // Dynamic Medication Logs list in State
   List<MedicationLog> _medications = [];
   List<DiagnosisLog> _diagnoses = [];
@@ -60,6 +64,50 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void initState() {
     super.initState();
     _loadLocalData();
+    _setupEmergencyChannel();
+  }
+
+  // Set up listener for native callbacks and check initial launch intents
+  void _setupEmergencyChannel() {
+    // 1. Listen for dynamic navigation calls from MainActivity (when app is already running)
+    _emergencyChannel.setMethodCallHandler((call) async {
+      if (call.method == 'navigateToEmergency') {
+        _navigateToEmergencyScreen();
+      }
+    });
+
+    // 2. Query initial route (if app was started from scratch by clicking widget or status bar notification)
+    _emergencyChannel.invokeMethod<String>('getInitialRoute').then((route) {
+      if (route == 'emergency') {
+        _navigateToEmergencyScreen();
+      }
+    });
+  }
+
+  void _navigateToEmergencyScreen() {
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => EmergencyPassScreen(profile: _profile),
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateEmergencyServiceState(bool enabled) async {
+    try {
+      if (enabled) {
+        await _emergencyChannel.invokeMethod('startEmergencyService', {
+          'name': _profile.name,
+          'blood': _profile.bloodType,
+          'contact': _profile.emergencyContact,
+        });
+      } else {
+        await _emergencyChannel.invokeMethod('stopEmergencyService');
+      }
+    } on PlatformException catch (e) {
+      debugPrint("Failed to sync with native emergency channel: ${e.message}");
+    }
   }
 
   // Load profile, medication logs, and diagnoses from encrypted Hive storage
@@ -67,13 +115,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     final savedProfile = localStorage.getProfile();
     final savedMedications = localStorage.getMedications();
     final savedDiagnoses = localStorage.getDiagnoses();
+    final savedEmergencyPass = localStorage.getEmergencyPassEnabled();
     setState(() {
       if (savedProfile != null) {
         _profile = savedProfile;
       }
       _medications = savedMedications;
       _diagnoses = savedDiagnoses;
+      _isEmergencyPassEnabled = savedEmergencyPass;
     });
+
+    // Automatically sync updated details to native bar/widget if enabled
+    if (savedEmergencyPass) {
+      _updateEmergencyServiceState(true);
+    }
   }
 
   // Opens the camera to take a prescription photo, uploads it to backend OCR, and opens the review screen
@@ -1844,19 +1899,23 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       Switch(
                         activeColor: errorColor,
                         value: _isEmergencyPassEnabled,
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           setState(() {
                             _isEmergencyPassEnabled = value;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                value 
-                                  ? '비상 의료 패스 알림창 위젯이 활성화되었습니다. 잠금화면에서 비상 정보가 표시됩니다.' 
-                                  : '비상 의료 패스 알림창 위젯이 비활성화되었습니다.'
+                          await localStorage.saveEmergencyPassEnabled(value);
+                          await _updateEmergencyServiceState(value);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  value 
+                                    ? '비상 의료 패스 알림창 위젯이 활성화되었습니다. 잠금화면에서 비상 정보가 표시됩니다.' 
+                                    : '비상 의료 패스 알림창 위젯이 비활성화되었습니다.'
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                       ),
                     ],

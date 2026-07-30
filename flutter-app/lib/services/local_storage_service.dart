@@ -159,4 +159,14 @@ class LocalStorageService {
   Future<void> saveFontSizeFactor(double factor) async {
     await _profileBox.put('fontSizeFactor', factor.toString());
   }
+
+  // Emergency Pass settings persistence
+  bool getEmergencyPassEnabled() {
+    final raw = _profileBox.get('emergencyPassEnabled');
+    return raw == 'true';
+  }
+
+  Future<void> saveEmergencyPassEnabled(bool enabled) async {
+    await _profileBox.put('emergencyPassEnabled', enabled.toString());
+  }
 }
