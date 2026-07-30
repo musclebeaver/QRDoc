@@ -1895,7 +1895,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Font Size Settings Card (어르신 배려 글자 크기 조절)
+            // Font Size Settings Card (글자 크기 조절)
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -1911,7 +1911,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       Icon(Icons.text_fields, color: primaryColor),
                       SizedBox(width: 8),
                       Text(
-                        '화면 글자 크기 조절 (어르신 배려)',
+                        '화면 글자 크기 조절',
                         style: TextStyle(
                           color: onSurfaceColor,
                           fontWeight: FontWeight.bold,
@@ -1970,7 +1970,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     if (value < 0.9) return '작은 글씨 (0.85배)';
     if (value < 1.1) return '보통 글씨 (1.0배 - 기본값)';
     if (value < 1.2) return '조금 큰 글씨 (1.15배)';
-    if (value < 1.4) return '큰 글씨 (1.30배 어르신 추천)';
+    if (value < 1.4) return '큰 글씨 (1.30배 추천)';
     return '가장 큰 글씨 (1.45배)';
   }
 
