@@ -9,6 +9,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.app.AlarmManager
+import android.app.PendingIntent
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.devbeaver.qrdoc/emergency"
@@ -88,6 +90,66 @@ class MainActivity : FlutterActivity() {
                         action = EmergencyNotificationService.ACTION_STOP
                     }
                     startService(intent)
+                    result.success(true)
+                }
+                "scheduleMedicationAlarm" -> {
+                    val id = call.argument<Int>("id") ?: 0
+                    val title = call.argument<String>("title") ?: ""
+                    val message = call.argument<String>("message") ?: ""
+                    val hour = call.argument<Int>("hour") ?: 8
+                    val minute = call.argument<Int>("minute") ?: 0
+
+                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    val intent = Intent(this, AlarmReceiver::class.java).apply {
+                        putExtra("id", id)
+                        putExtra("title", title)
+                        putExtra("message", message)
+                    }
+
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        id,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    // Calculate trigger time calendar
+                    val calendar = java.util.Calendar.getInstance().apply {
+                        timeInMillis = System.currentTimeMillis()
+                        set(java.util.Calendar.HOUR_OF_DAY, hour)
+                        set(java.util.Calendar.MINUTE, minute)
+                        set(java.util.Calendar.SECOND, 0)
+                        
+                        // If the scheduled time is in the past today, schedule it for tomorrow
+                        if (timeInMillis <= System.currentTimeMillis()) {
+                            add(java.util.Calendar.DAY_OF_YEAR, 1)
+                        }
+                    }
+
+                    // Set daily repeating alarm
+                    alarmManager.setRepeating(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        AlarmManager.INTERVAL_DAY,
+                        pendingIntent
+                    )
+
+                    result.success(true)
+                }
+                "cancelMedicationAlarm" -> {
+                    val id = call.argument<Int>("id") ?: 0
+                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    val intent = Intent(this, AlarmReceiver::class.java)
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        this,
+                        id,
+                        intent,
+                        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    if (pendingIntent != null) {
+                        alarmManager.cancel(pendingIntent)
+                        pendingIntent.cancel()
+                    }
                     result.success(true)
                 }
                 else -> {

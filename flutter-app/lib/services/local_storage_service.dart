@@ -1,20 +1,25 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
 import '../models/diagnosis_log.dart';
+import '../models/medication_intake.dart';
+import 'local_notification_service.dart';
 
 class LocalStorageService {
   static const String _dbKeyName = 'hive_encryption_key';
   static const String _profileBoxName = 'patient_profile_box';
   static const String _medicationBoxName = 'medication_log_box';
   static const String _diagnosisBoxName = 'diagnosis_log_box';
+  static const String _intakeBoxName = 'medication_intake_box';
   
   final _secureStorage = const FlutterSecureStorage();
   late Box<String> _profileBox;
   late Box<String> _medicationBox;
   late Box<String> _diagnosisBox;
+  late Box<String> _intakeBox;
 
   Future<void> initDatabase() async {
     await Hive.initFlutter();
@@ -39,6 +44,7 @@ class LocalStorageService {
     _profileBox = await Hive.openBox<String>(_profileBoxName, encryptionCipher: cipher);
     _medicationBox = await Hive.openBox<String>(_medicationBoxName, encryptionCipher: cipher);
     _diagnosisBox = await Hive.openBox<String>(_diagnosisBoxName, encryptionCipher: cipher);
+    _intakeBox = await Hive.openBox<String>(_intakeBoxName, encryptionCipher: cipher);
     
     // Seed default mock data if boxes are completely empty
     if (_profileBox.isEmpty) {
@@ -122,10 +128,58 @@ class LocalStorageService {
 
   Future<void> saveMedication(MedicationLog log) async {
     await _medicationBox.put(log.id, log.toJson());
+
+    // Generate daily intakes for the duration of the prescription
+    final List<MedicationIntake> newIntakes = [];
+    final startDate = DateTime.tryParse(log.prescriptionDate) ?? DateTime.now();
+
+    for (int d = 0; d < log.totalDays; d++) {
+      final targetDate = startDate.add(Duration(days: d));
+      final dateStr = "${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
+
+      final List<String> times;
+      if (log.frequencyPerDay >= 3) {
+        times = ["08:00", "13:00", "19:00"];
+      } else if (log.frequencyPerDay == 2) {
+        times = ["08:00", "19:00"];
+      } else {
+        times = ["08:00"];
+      }
+
+      for (int i = 0; i < log.frequencyPerDay; i++) {
+        final timeStr = i < times.length ? times[i] : "13:00";
+        newIntakes.add(MedicationIntake(
+          id: "${log.id}_${dateStr}_$i",
+          medicationLogId: log.id,
+          medicineName: log.medicineName,
+          date: dateStr,
+          intakeIndex: i,
+          scheduledTime: timeStr,
+          isTaken: false,
+        ));
+      }
+    }
+    
+    if (newIntakes.isNotEmpty) {
+      await saveIntakes(newIntakes);
+    }
+
+    // Schedule native alarm reminders
+    await LocalNotificationService.scheduleAlarmsForMedication(log);
   }
 
   Future<void> deleteMedication(String id) async {
+    final raw = _medicationBox.get(id);
+    if (raw != null) {
+      try {
+        final log = MedicationLog.fromJson(raw);
+        await LocalNotificationService.cancelAlarmsForMedication(log);
+      } catch (e) {
+        debugPrint("Error cancelling alarms: $e");
+      }
+    }
     await _medicationBox.delete(id);
+    await deleteIntakesForLog(id);
   }
 
   // Diagnoses CRUD
@@ -168,5 +222,44 @@ class LocalStorageService {
 
   Future<void> saveEmergencyPassEnabled(bool enabled) async {
     await _profileBox.put('emergencyPassEnabled', enabled.toString());
+  }
+
+  // Medication Intakes Tracking
+  List<MedicationIntake> getIntakes() {
+    return _intakeBox.values
+        .map((raw) => MedicationIntake.fromJson(raw))
+        .toList();
+  }
+
+  Future<void> saveIntake(MedicationIntake intake) async {
+    await _intakeBox.put(intake.id, intake.toJson());
+  }
+
+  Future<void> saveIntakes(List<MedicationIntake> intakes) async {
+    final Map<String, String> data = {};
+    for (var val in intakes) {
+      data[val.id] = val.toJson();
+    }
+    await _intakeBox.putAll(data);
+  }
+
+  List<MedicationIntake> getIntakesForDate(String date) {
+    return _intakeBox.values
+        .map((raw) => MedicationIntake.fromJson(raw))
+        .where((element) => element.date == date)
+        .toList();
+  }
+
+  Future<void> deleteIntakesForLog(String medicationLogId) async {
+    final keysToDelete = _intakeBox.keys.where((key) {
+      final raw = _intakeBox.get(key);
+      if (raw == null) return false;
+      final item = MedicationIntake.fromJson(raw);
+      return item.medicationLogId == medicationLogId;
+    }).toList();
+    
+    if (keysToDelete.isNotEmpty) {
+      await _intakeBox.deleteAll(keysToDelete);
+    }
   }
 }

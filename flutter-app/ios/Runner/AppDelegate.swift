@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import WidgetKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -51,6 +52,51 @@ import WidgetKit
         }
         if #available(iOS 14.0, *) {
           WidgetCenter.shared.reloadAllTimelines()
+        }
+        result(true)
+      case "scheduleMedicationAlarm":
+        if let args = call.arguments as? [String: Any] {
+          let idInt = args["id"] as? Int ?? 0
+          let id = String(idInt)
+          let title = args["title"] as? String ?? "복약 알림"
+          let message = args["message"] as? String ?? "약 먹을 시간입니다!"
+          let hour = args["hour"] as? Int ?? 8
+          let minute = args["minute"] as? Int ?? 0
+          
+          if #available(iOS 10.0, *) {
+            let center = UNUserNotificationCenter.current()
+            
+            // Request permissions if not already authorized
+            center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in }
+            
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = message
+            content.sound = UNNotificationSound.default
+            
+            var dateComponents = DateComponents()
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            // Create daily repeating calendar trigger
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+            
+            center.add(request) { error in
+              if let error = error {
+                print("Failed to schedule local notification: \(error)")
+              }
+            }
+          }
+        }
+        result(true)
+      case "cancelMedicationAlarm":
+        if let args = call.arguments as? [String: Any] {
+          let idInt = args["id"] as? Int ?? 0
+          let id = String(idInt)
+          if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
+          }
         }
         result(true)
       default:

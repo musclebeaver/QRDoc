@@ -8,6 +8,7 @@ import '../main.dart'; // To access the global localStorage singleton
 import 'edit_profile_screen.dart';
 import '../models/patient_profile.dart';
 import '../models/medication_log.dart';
+import '../models/medication_intake.dart';
 import '../models/diagnosis_log.dart';
 import 'diagnosis_review_screen.dart';
 import 'qr_generator_screen.dart';
@@ -59,6 +60,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _recordsSubTabIndex = 0; // 0: medications, 1: diagnoses
   int _currentIndex = 0;
   bool _isEmergencyPassEnabled = false;
+
+  // Selected date and intakes list for the local medication calendar tracker
+  DateTime _selectedDate = DateTime.now();
+  List<MedicationIntake> _dailyIntakes = [];
 
   @override
   void initState() {
@@ -125,10 +130,245 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       _isEmergencyPassEnabled = savedEmergencyPass;
     });
 
+    // Load daily intakes
+    _loadDailyIntakes();
+
     // Automatically sync updated details to native bar/widget if enabled
     if (savedEmergencyPass) {
       _updateEmergencyServiceState(true);
     }
+  }
+
+  void _loadDailyIntakes() {
+    final dateStr = "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}";
+    setState(() {
+      _dailyIntakes = localStorage.getIntakesForDate(dateStr);
+    });
+  }
+
+  Future<void> _toggleIntake(MedicationIntake intake) async {
+    final updated = MedicationIntake(
+      id: intake.id,
+      medicationLogId: intake.medicationLogId,
+      medicineName: intake.medicineName,
+      date: intake.date,
+      intakeIndex: intake.intakeIndex,
+      scheduledTime: intake.scheduledTime,
+      isTaken: !intake.isTaken,
+      takenTime: !intake.isTaken ? DateTime.now().toString() : null,
+    );
+    await localStorage.saveIntake(updated);
+    _loadDailyIntakes();
+
+    if (updated.isTaken && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🎉 ${updated.medicineName} 복용을 완료했습니다!'),
+          duration: const Duration(seconds: 1),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  Widget _buildMedicationCalendarSection() {
+    // Generate dates for current week (Sun-Sat)
+    final now = DateTime.now();
+    final sunday = now.subtract(Duration(days: now.weekday % 7));
+    final weekDates = List.generate(7, (index) => sunday.add(Duration(days: index)));
+
+    final weekdayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    return Container(
+      margin: const EdgeInsets.only(top: 24.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                '📅 오늘의 복약 관리',
+                style: TextStyle(
+                  color: onSurfaceColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              Text(
+                '${_selectedDate.month}월 ${_selectedDate.day}일',
+                style: const TextStyle(
+                  color: primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Horizontal Week Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(7, (index) {
+              final date = weekDates[index];
+              final isSelected = date.day == _selectedDate.day &&
+                  date.month == _selectedDate.month &&
+                  date.year == _selectedDate.year;
+              final isToday = date.day == now.day &&
+                  date.month == now.month &&
+                  date.year == now.year;
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                    _loadDailyIntakes();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    decoration: BoxDecoration(
+                      color: isSelected ? primaryColor : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: isToday && !isSelected
+                          ? Border.all(color: primaryColor, width: 1.5)
+                          : null,
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          weekdayNames[index],
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : (index == 0
+                                    ? errorColor
+                                    : (index == 6 ? primaryColor : onSurfaceVariant)),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : onSurfaceColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 20),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          // Intake checklist
+          _dailyIntakes.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Column(
+                    children: const [
+                      Icon(Icons.check_circle_outline, color: onSurfaceVariant, size: 36),
+                      SizedBox(height: 8),
+                      Text(
+                        '이 날은 복약 예정된 약물이 없습니다.',
+                        style: TextStyle(color: onSurfaceVariant, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _dailyIntakes.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final intake = _dailyIntakes[index];
+                    final String timeLabel;
+                    if (intake.intakeIndex == 0) {
+                      timeLabel = '☀️ 아침 복용 (${intake.scheduledTime})';
+                    } else if (intake.intakeIndex == 1) {
+                      timeLabel = '🌤️ 점심 복용 (${intake.scheduledTime})';
+                    } else {
+                      timeLabel = '🌙 저녁 복용 (${intake.scheduledTime})';
+                    }
+
+                    return GestureDetector(
+                      onTap: () => _toggleIntake(intake),
+                      child: Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: intake.isTaken
+                              ? primaryColor.withOpacity(0.05)
+                              : surfaceColor,
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(
+                            color: intake.isTaken ? primaryColor : outlineVariant,
+                            width: intake.isTaken ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              activeColor: primaryColor,
+                              value: intake.isTaken,
+                              onChanged: (val) => _toggleIntake(intake),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    intake.medicineName,
+                                    style: TextStyle(
+                                      color: onSurfaceColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      decoration: intake.isTaken
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    timeLabel,
+                                    style: const TextStyle(
+                                      color: onSurfaceVariant,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (intake.isTaken)
+                              const Icon(Icons.check_circle, color: primaryColor, size: 24)
+                            else
+                              const Icon(Icons.radio_button_unchecked, color: onSurfaceVariant, size: 24),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ],
+      ),
+    );
   }
 
   // Opens the camera to take a prescription photo, uploads it to backend OCR, and opens the review screen
@@ -1304,6 +1544,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ),
               ),
             ),
+            
+            // Weekly Medication Calendar Tracker Section
+            _buildMedicationCalendarSection(),
+
             const SizedBox(height: 24),
 
             // Recent Records Title

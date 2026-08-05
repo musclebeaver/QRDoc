@@ -63,6 +63,12 @@
                 android:resource="@xml/emergency_widget_info" />
         </receiver>
 
+        <!-- Medication Alarms Receiver -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
