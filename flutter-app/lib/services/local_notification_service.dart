@@ -1,29 +1,37 @@
 import 'package:flutter/services.dart';
 import '../models/medication_log.dart';
+import '../main.dart';
 
 class LocalNotificationService {
   static const _channel = MethodChannel('com.devbeaver.qrdoc/emergency');
 
-  // Schedule daily repeating alarms for a new medication log
+  // Helper to parse "HH:mm" time string into hour and minute map
+  static Map<String, int> _parseTime(String timeStr, int defaultHour, int defaultMinute) {
+    final parts = timeStr.split(':');
+    if (parts.length == 2) {
+      final h = int.tryParse(parts[0]) ?? defaultHour;
+      final m = int.tryParse(parts[1]) ?? defaultMinute;
+      return {'hour': h, 'minute': m};
+    }
+    return {'hour': defaultHour, 'minute': defaultMinute};
+  }
+
+  // Schedule daily repeating alarms for a new medication log based on custom user times
   static Future<void> scheduleAlarmsForMedication(MedicationLog log) async {
     if (!log.isActive) return;
 
+    final reminderTimes = localStorage.getReminderTimes();
+    final morning = _parseTime(reminderTimes['morning'] ?? '08:00', 8, 0);
+    final lunch = _parseTime(reminderTimes['lunch'] ?? '13:00', 13, 0);
+    final evening = _parseTime(reminderTimes['evening'] ?? '19:00', 19, 0);
+
     final List<Map<String, int>> times;
     if (log.frequencyPerDay >= 3) {
-      times = [
-        {'hour': 8, 'minute': 0},
-        {'hour': 13, 'minute': 0},
-        {'hour': 19, 'minute': 0},
-      ];
+      times = [morning, lunch, evening];
     } else if (log.frequencyPerDay == 2) {
-      times = [
-        {'hour': 8, 'minute': 0},
-        {'hour': 19, 'minute': 0},
-      ];
+      times = [morning, evening];
     } else {
-      times = [
-        {'hour': 8, 'minute': 0},
-      ];
+      times = [morning];
     }
 
     for (int i = 0; i < log.frequencyPerDay; i++) {
@@ -41,9 +49,16 @@ class LocalNotificationService {
           'minute': minute,
         });
       } on PlatformException catch (e) {
-        // Graceful error logging
         print("Failed to schedule native alarm: ${e.message}");
       }
+    }
+  }
+
+  // Reschedule all active alarms when reminder times are modified in settings
+  static Future<void> rescheduleAllAlarms(List<MedicationLog> activeLogs) async {
+    for (var log in activeLogs) {
+      await cancelAlarmsForMedication(log);
+      await scheduleAlarmsForMedication(log);
     }
   }
 

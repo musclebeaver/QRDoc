@@ -14,6 +14,7 @@ import 'diagnosis_review_screen.dart';
 import 'qr_generator_screen.dart';
 import 'ai_review_screen.dart';
 import 'emergency_pass_screen.dart';
+import '../services/local_notification_service.dart';
 
 class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({Key? key}) : super(key: key);
@@ -2262,8 +2263,119 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Custom Reminder Time Settings Card
+            _buildReminderTimeSettingsCard(),
+
             const SizedBox(height: 80),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderTimeSettingsCard() {
+    final reminderTimes = localStorage.getReminderTimes();
+    final morning = reminderTimes['morning'] ?? '08:00';
+    final lunch = reminderTimes['lunch'] ?? '13:00';
+    final evening = reminderTimes['evening'] ?? '19:00';
+
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.alarm, color: primaryColor),
+              SizedBox(width: 8),
+              Text(
+                '복약 알림 시각 설정',
+                style: TextStyle(
+                  color: onSurfaceColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '하루 1~3회 약물 복용 시 알림이 팝업될 시각을 지정합니다. 터치하여 변경할 수 있습니다.',
+            style: TextStyle(color: onSurfaceVariant, fontSize: 12),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildTimeChip('☀️ 아침', morning, (newTime) async {
+                await localStorage.saveReminderTimes(newTime, lunch, evening);
+                await LocalNotificationService.rescheduleAllAlarms(_medications.where((m) => m.isActive).toList());
+                _loadLocalData();
+              }),
+              const SizedBox(width: 8),
+              _buildTimeChip('🌤️ 점심', lunch, (newTime) async {
+                await localStorage.saveReminderTimes(morning, newTime, evening);
+                await LocalNotificationService.rescheduleAllAlarms(_medications.where((m) => m.isActive).toList());
+                _loadLocalData();
+              }),
+              const SizedBox(width: 8),
+              _buildTimeChip('🌙 저녁', evening, (newTime) async {
+                await localStorage.saveReminderTimes(morning, lunch, newTime);
+                await LocalNotificationService.rescheduleAllAlarms(_medications.where((m) => m.isActive).toList());
+                _loadLocalData();
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeChip(String label, String currentTime, Function(String) onTimeSelected) {
+    return Expanded(
+      child: InkWell(
+        onTap: () async {
+          final parts = currentTime.split(':');
+          final initialHour = int.tryParse(parts[0]) ?? 8;
+          final initialMinute = int.tryParse(parts[1]) ?? 0;
+
+          final TimeOfDay? picked = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay(hour: initialHour, minute: initialMinute),
+          );
+
+          if (picked != null) {
+            final h = picked.hour.toString().padLeft(2, '0');
+            final m = picked.minute.toString().padLeft(2, '0');
+            onTimeSelected("$h:$m");
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+          decoration: BoxDecoration(
+            color: primaryColor.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(color: primaryColor.withOpacity(0.2)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: onSurfaceColor),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                currentTime,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: primaryColor),
+              ),
+            ],
+          ),
         ),
       ),
     );

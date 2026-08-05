@@ -133,17 +133,22 @@ class LocalStorageService {
     final List<MedicationIntake> newIntakes = [];
     final startDate = DateTime.tryParse(log.prescriptionDate) ?? DateTime.now();
 
+    final reminderTimes = getReminderTimes();
+    final String morningStr = reminderTimes['morning'] ?? "08:00";
+    final String lunchStr = reminderTimes['lunch'] ?? "13:00";
+    final String eveningStr = reminderTimes['evening'] ?? "19:00";
+
     for (int d = 0; d < log.totalDays; d++) {
       final targetDate = startDate.add(Duration(days: d));
       final dateStr = "${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}";
 
       final List<String> times;
       if (log.frequencyPerDay >= 3) {
-        times = ["08:00", "13:00", "19:00"];
+        times = [morningStr, lunchStr, eveningStr];
       } else if (log.frequencyPerDay == 2) {
-        times = ["08:00", "19:00"];
+        times = [morningStr, eveningStr];
       } else {
-        times = ["08:00"];
+        times = [morningStr];
       }
 
       for (int i = 0; i < log.frequencyPerDay; i++) {
@@ -261,5 +266,23 @@ class LocalStorageService {
     if (keysToDelete.isNotEmpty) {
       await _intakeBox.deleteAll(keysToDelete);
     }
+  }
+
+  // Custom Reminder Times Persistence
+  Map<String, String> getReminderTimes() {
+    final morning = _profileBox.get('reminder_morning') ?? '08:00';
+    final lunch = _profileBox.get('reminder_lunch') ?? '13:00';
+    final evening = _profileBox.get('reminder_evening') ?? '19:00';
+    return {
+      'morning': morning,
+      'lunch': lunch,
+      'evening': evening,
+    };
+  }
+
+  Future<void> saveReminderTimes(String morning, String lunch, String evening) async {
+    await _profileBox.put('reminder_morning', morning);
+    await _profileBox.put('reminder_lunch', lunch);
+    await _profileBox.put('reminder_evening', evening);
   }
 }
