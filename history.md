@@ -128,6 +128,14 @@
     * **iOS**: [AppDelegate.swift](file:///workspace/QRDoc/flutter-app/ios/Runner/AppDelegate.swift)에 `UNUserNotificationCenter` 및 `UNCalendarNotificationTrigger`를 통합하여 Swift 단에서 기본 알림 권한 획득 및 daily 반복 알림 등록을 유기적으로 제어합니다.
     * **Flutter**: [local_notification_service.dart](file:///workspace/QRDoc/flutter-app/lib/services/local_notification_service.dart)를 생성하여 처방전 추가/삭제 시 네이티브 OS 알람 예약 및 해제를 일관되게 동기화 연동시켰습니다.
 
+### 15. 사용자 정의 복약 알림 시각 설정 기능 개발 완료 (2026-08-05)
+* **⏰ 사용자 정의 알림 시각 인터페이스 추가**:
+  * [patient_home_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/patient_home_screen.dart)의 내 프로필 탭에 **"복약 알림 시각 설정"** 카드를 신규 배치했습니다.
+  * `☀️ 아침 (기본 08:00)`, `🌤️ 점심 (기본 13:00)`, `🌙 저녁 (기본 19:00)` 알림 시간을 터치하면 플러터 네이티브 `showTimePicker` 팝업 모달이 팝업되어 사용자가 본인의 생활 패턴(예: 07:30, 12:30, 20:00)에 맞춰 자유롭게 조정할 수 있습니다.
+* **🔄 네이티브 알람 및 로컬 DB 자동 재동기화**:
+  * 시각 변경 즉시 [local_storage_service.dart](file:///workspace/QRDoc/flutter-app/lib/services/local_storage_service.dart)에 커스텀 시간이 암호화 저장됩니다.
+  * [local_notification_service.dart](file:///workspace/QRDoc/flutter-app/lib/services/local_notification_service.dart)의 `rescheduleAllAlarms()` 메소드가 기동하여 기존 등록되어 있던 알림들을 전부 취소하고 사용자가 지정한 시각으로 안드로이드/iOS 네이티브 시스템 알람 스케줄을 일괄 재조정합니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -137,7 +145,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=14](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=14)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=14` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=15](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=15)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=15` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
