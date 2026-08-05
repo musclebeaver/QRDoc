@@ -115,6 +115,19 @@
   * [EmergencyWidget.swift](file:///workspace/QRDoc/flutter-app/ios/EmergencyWidget.swift)를 신규 생성하여 iOS 홈화면 위젯(2x2, .systemSmall)의 SwiftUI 코드를 제공했습니다.
   * 안드로이드 홈 위젯과 완벽히 짝을 이루는 디자인(Slate Dark 카드 배경 + 레드 터치 버튼)을 구현했으며, 위젯 터치 시 **`qrdoc://emergency`** 스키마 딥링크를 타고 앱 내 비상 의료 패스 오버레이 화면으로 랜딩하도록 설계했습니다.
 
+### 14. 로컬 푸시 알림 및 로컬 캘린더 복약 트래커 개발 완료 (2026-08-05)
+* **💊 복약 인테이크 데이터베이스 설계**:
+  * [medication_intake.dart](file:///workspace/QRDoc/flutter-app/lib/models/medication_intake.dart) 모델을 구축하고 로컬 암호화 저장소(`_intakeBox`)를 연동했습니다.
+  * 처방전 추가 시, 설정된 기간(예: 3일, 5일) 및 빈도(하루 1~3회)에 맞게 일별 복약 스케줄 인스턴스가 자동으로 데이터베이스에 벌크 프리-프로비저닝되도록 [local_storage_service.dart](file:///workspace/QRDoc/flutter-app/lib/services/local_storage_service.dart)를 확장했습니다.
+* **📅 주간 복약 캘린더 및 체크리스트 UI 구현**:
+  * [patient_home_screen.dart](file:///workspace/QRDoc/flutter-app/lib/screens/patient_home_screen.dart)의 홈 탭 최상단에 주간(일~토) 날짜를 가로로 스크롤/터치 선택할 수 있는 캘린더 위젯을 삽입했습니다.
+  * 선택일자의 아침/점심/저녁 복약 카드 목록을 제공하며, 체크 박스를 통해 실시간 복용 여부(`isTaken`)가 토글되고 축하 피드백(Floating SnackBar)이 연출되도록 UI 상태 관리를 구현했습니다.
+* **🔔 네이티브 브릿지 기반 로컬 푸시 리마인더 스케줄러**:
+  * 라이브러리 충돌 및 파일 용량 부담이 전혀 없는 네이티브 채널 방식으로 개발했습니다:
+    * **Android**: [AlarmReceiver.kt](file:///workspace/QRDoc/flutter-app/android/app/src/main/kotlin/com/devbeaver/qrdoc/AlarmReceiver.kt) 방송 수신기를 구현하여 `AlarmManager`를 통한 매일 지정시각(08:00, 13:00, 19:00) 반복 로컬 복약 푸시 알림을 이식했습니다.
+    * **iOS**: [AppDelegate.swift](file:///workspace/QRDoc/flutter-app/ios/Runner/AppDelegate.swift)에 `UNUserNotificationCenter` 및 `UNCalendarNotificationTrigger`를 통합하여 Swift 단에서 기본 알림 권한 획득 및 daily 반복 알림 등록을 유기적으로 제어합니다.
+    * **Flutter**: [local_notification_service.dart](file:///workspace/QRDoc/flutter-app/lib/services/local_notification_service.dart)를 생성하여 처방전 추가/삭제 시 네이티브 OS 알람 예약 및 해제를 일관되게 동기화 연동시켰습니다.
+
 ---
 
 ## 🔗 배포 및 서비스 접속 주소 정보
@@ -124,7 +137,7 @@
 2. **개인정보처리방침 공인 주소 (마켓 제출용)**:
    * **URL**: [http://qrdoc.devbeaver.cloud/privacy.html](http://qrdoc.devbeaver.cloud/privacy.html)
 3. **환자용 모바일 앱 (APK) 다운로드 링크**:
-   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=13](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=13)
-   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=13` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
+   * **URL**: [http://qrdoc.devbeaver.cloud/qrdoc.apk?v=14](http://qrdoc.devbeaver.cloud/qrdoc.apk?v=14)
+   * *(※ Cloudflare CDN 캐시 우회를 위해 주소 뒤에 `?v=14` 캐시 버스터 파라미터를 추가하여 접속해 주시기 바랍니다.)*
 4. **백엔드 직접 API 엔드포인트**:
    * **URL**: `http://qrdoc.devbeaver.cloud/api` 또는 내부망 테스트 포트 `http://localhost:5000/api`
